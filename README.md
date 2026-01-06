@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 Hack The Bot  
+### _A Cyberpunk AI Puzzle Experience_
 
-## Getting Started
+**Hack The Bot** is an interactive, story-driven web game where players must outsmart an AI bot using **creative prompts, logic, and imagination**.  
+Set in a **Tokyo cyberpunk nightscape**, every level challenges how well you can communicate with an AI under pressure.
 
-First, run the development server:
+This is not a coding challenge —  
+this is a **prompt-hacking battle of minds**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌃 Game Structure (Levels)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🌧 Level 1: Neon Rain
+- **Theme:** Rain, reflections, dark alleys  
+- **Hidden Word:** `NEON_RAIN`  
+- **Bot Personality:** Mysterious, poetic  
+- **Goal:** Understand metaphor-based responses
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### 🚦 Level 2: Shibuya Pulse
+- **Theme:** Crowds, signals, chaos  
+- **Hidden Word:** `SHIBUYA_SIGNAL`  
+- **Bot Personality:** Fast, glitchy, impatient  
+- **Goal:** Control chaos with precise prompts
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🗼 Level 3: Tokyo Core
+- **Theme:** Data towers, control rooms  
+- **Hidden Word:** `TOKYO_404`  
+- **Bot Personality:** Cold, logical  
+- **Goal:** Break logic loops and exploit patterns
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🧩 Core Gameplay Twist
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### ⚡ Prompt Quality Meter
+Your prompts are scored in real time.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
