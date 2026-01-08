@@ -1,24 +1,29 @@
-import { NextResponse } from "next/server";
-import clientPromise from "@/lib/db";
+// src/lib/db.ts
+import { MongoClient } from "mongodb";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    
-    // Check: Agar DB connection nahi hai (null hai)
-    if (!clientPromise) {
-      console.log("Mock Saving Score (No DB):", body);
-      return NextResponse.json({ message: "DB disabled, score skipped" });
+const uri = process.env.MONGODB_URI;
+let clientPromise: Promise<MongoClient> | null = null;
+
+if (!uri) {
+  // Yahan hum Error THROW NAHI kar rahe, bas warning de rahe hain
+  console.warn("⚠️ MONGODB_URI is missing. Running in Offline Mode.");
+} else {
+  const options = {};
+  
+  if (process.env.NODE_ENV === "development") {
+    let globalWithMongo = global as typeof globalThis & {
+      _mongoClientPromise?: Promise<MongoClient>;
+    };
+    if (!globalWithMongo._mongoClientPromise) {
+      const client = new MongoClient(uri, options);
+      globalWithMongo._mongoClientPromise = client.connect();
     }
-
-    // Agar DB hai, toh normal save karo
-    const client = await clientPromise;
-    const db = client.db("gameDB");
-    await db.collection("scores").insertOne(body);
-
-    return NextResponse.json({ message: "Score Saved!" });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+    clientPromise = globalWithMongo._mongoClientPromise;
+  } else {
+    const client = new MongoClient(uri, options);
+    clientPromise = client.connect();
   }
 }
+
+// Ye ab null return karega agar URI nahi hai -> Build Pass ho jayega
+export default clientPromise;
