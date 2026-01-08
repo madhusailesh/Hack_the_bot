@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/db";
 import { NextResponse } from "next/server";
-
+export const dynamic = "force-dynamic";
 export async function GET() {
   // Agar DB connected nahi hai (Offline Mode)
   if (!clientPromise) {
