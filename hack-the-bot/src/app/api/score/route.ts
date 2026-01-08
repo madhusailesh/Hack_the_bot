@@ -1,29 +1,32 @@
-// src/lib/db.ts
-import { MongoClient } from "mongodb";
+import { NextResponse } from "next/server";
+import clientPromise from "@/lib/db";
 
-const uri = process.env.MONGODB_URI;
-let clientPromise: Promise<MongoClient> | null = null;
-
-if (!uri) {
-  // Yahan hum Error THROW NAHI kar rahe, bas warning de rahe hain
-  console.warn("⚠️ MONGODB_URI is missing. Running in Offline Mode.");
-} else {
-  const options = {};
-  
-  if (process.env.NODE_ENV === "development") {
-    let globalWithMongo = global as typeof globalThis & {
-      _mongoClientPromise?: Promise<MongoClient>;
-    };
-    if (!globalWithMongo._mongoClientPromise) {
-      const client = new MongoClient(uri, options);
-      globalWithMongo._mongoClientPromise = client.connect();
+// Note: "export default" use mat karna, "export async function" use karo
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+     
+    if (!clientPromise) {
+      console.log("⚠️ Offline Mode: Score received but not saved to DB:", body);
+      return NextResponse.json({ message: "Score processed (Offline Mode)" });
     }
-    clientPromise = globalWithMongo._mongoClientPromise;
-  } else {
-    const client = new MongoClient(uri, options);
-    clientPromise = client.connect();
+
+    // 2. Real DB Logic
+    const client = await clientPromise;
+    const db = client.db("hackthebot"); // Apna DB naam check kar lena
+    
+    // Score save karna
+    await db.collection("scores").insertOne({
+      name: body.name,
+      regNo: body.regNo,
+      totalTime: body.totalTime,
+      timestamp: new Date()
+    });
+
+    return NextResponse.json({ message: "Score Saved Successfully!" });
+
+  } catch (e) {
+    console.error("Score Save Error:", e);
+    return NextResponse.json({ error: "Failed to save score" }, { status: 500 });
   }
 }
-
-// Ye ab null return karega agar URI nahi hai -> Build Pass ho jayega
-export default clientPromise;
