@@ -4,7 +4,7 @@ declare global{
     var mongoClient : Promise<MongoClient> | undefined;
 };
 
-const uri = process.env.MONGODB_URI; 
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017"; 
 
 if(!(global.mongoClient)){
     const conn = new MongoClient(uri);

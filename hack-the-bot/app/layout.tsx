@@ -1,0 +1,45 @@
+import type React from "react"
+import type { Metadata } from "next"
+import { Noto_Sans_JP } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import "./globals.css"
+
+const notoSansJP = Noto_Sans_JP({ subsets: ["latin", "cyrillic"], weight: ["400", "700", "900"] })
+
+export const metadata: Metadata = {
+  title: "Hack-The-Bot - 言葉マスター",
+  description: "Japanese cyberpunk themed 4-level word guessing game with AI chatbot",
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en">
+      <body className={`${notoSansJP.className} antialiased`}>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  )
+}
