@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Lightbulb, Clock } from "lucide-react"
 import CongratulationsModal from "@/components/congratulations-modal"
+import GameOverModal from "@/components/game-over-modal"
 
 interface GamePageProps {
   userName: string
@@ -71,6 +72,7 @@ export default function GamePage({ userName, regNo, onGameComplete }: GamePagePr
   const [guessHistory, setGuessHistory] = useState<string[]>([])
   const [levelStatus, setLevelStatus] = useState<"playing" | "won" | "lost">("playing")
   const [showCongrats, setShowCongrats] = useState(false)
+  const [showGameOver, setShowGameOver] = useState(false)
   const [levelStartTime, setLevelStartTime] = useState<number>(Date.now())
   const [levelTimeElapsed, setLevelTimeElapsed] = useState(0)
   const [levelResults, setLevelResults] = useState<
@@ -90,6 +92,7 @@ export default function GamePage({ userName, regNo, onGameComplete }: GamePagePr
       // Check if time is up
       if (elapsed >= currentLevel.timeLimit && levelStatus === "playing") {
         setLevelStatus("lost")
+        setShowGameOver(true)
       }
     }, 1000)
 
@@ -200,6 +203,16 @@ export default function GamePage({ userName, regNo, onGameComplete }: GamePagePr
         timeUsed={levelTimeElapsed}
       />
 
+      <GameOverModal
+        isOpen={showGameOver}
+        level={currentLevelIdx + 1}
+        secretWord={currentLevel.secretWord}
+        userName={userName}
+        attempts={guessHistory.length}
+        timeUsed={levelTimeElapsed}
+        onViewResults={handleGameOver}
+      />
+
       <div className="w-80 space-y-6">
         {/* User Info */}
         <div className="space-y-4">
@@ -292,14 +305,6 @@ export default function GamePage({ userName, regNo, onGameComplete }: GamePagePr
             </span>
           </div>
         </div>
-
-        {/* Terminate Button */}
-        <Button
-          className="w-full h-10 text-xs font-bold uppercase tracking-wider border-2 border-red-500/50 text-red-500 bg-transparent hover:bg-red-500/10 transition-all"
-          variant="outline"
-        >
-          TERMINATE SESSION
-        </Button>
       </div>
 
       <div className="flex-1 max-w-2xl space-y-6">
@@ -406,22 +411,6 @@ export default function GamePage({ userName, regNo, onGameComplete }: GamePagePr
               }}
             >
               {currentLevelIdx < GAME_LEVELS.length - 1 ? "NEXT LEVEL →" : "VIEW RESULTS 🏆"}
-            </Button>
-          </div>
-        )}
-
-        {/* Game Over Message */}
-        {levelStatus === "lost" && (
-          <div className="p-6 bg-gradient-to-r from-red-500/10 to-pink-500/10 border-2 border-red-500/50 rounded-lg text-center space-y-3">
-            <p className="text-3xl">💀</p>
-            <p className="text-lg font-bold text-red-400 uppercase tracking-wider">TIME'S UP!</p>
-            <p className="text-sm text-gray-300">Sorry, you lost! Better luck next time.</p>
-            <p className="text-xs text-gray-400">The answer was: <span className="text-cyan-400 font-bold">{currentLevel.secretWord}</span></p>
-            <Button
-              onClick={handleGameOver}
-              className="w-full h-10 font-bold uppercase tracking-wider text-white bg-red-500/20 border border-red-500/50 hover:bg-red-500/30 transition-all"
-            >
-              VIEW RESULTS 📊
             </Button>
           </div>
         )}
