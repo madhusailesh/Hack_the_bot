@@ -24,6 +24,7 @@ export default function Home() {
       // 200 = New User, 401 = Existing User (Both allowed to play)
       localStorage.setItem("playerName", name);
       localStorage.setItem("playerReg", regNo);
+      localStorage.setItem("UserId",data.uId);
       router.push("/game");
     } else {
       alert("Login Failed: " + data.message);
@@ -64,3 +65,4 @@ export default function Home() {
     </main>
   );
 }
+
