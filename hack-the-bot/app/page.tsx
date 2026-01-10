@@ -41,7 +41,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-black">
+    <main className="min-h-screen min-w-screen relative overflow-hidden bg-black">
       <div
         className="fixed inset-0 z-0 bg-cover bg-center opacity-40"
         style={{
@@ -49,9 +49,9 @@ export default function Home() {
         }}
       />
 
-      <div className="fixed inset-0 z-1 bg-black/50" />
+      <div className="fixed inset-0 z-0 bg-black/50" />
 
-      <div className="fixed inset-0 z-1 pointer-events-none">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,217,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,217,255,0.05)_1px,transparent_1px)] bg-[length:60px_60px]" />
       </div>
 

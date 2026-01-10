@@ -4,7 +4,6 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
 interface LoginPageProps {
   onSubmit: (name: string, regNo: string) => void
 }
@@ -84,11 +83,11 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
           <Button
             type="submit"
             onClick={handleSubmit}
-            className="w-full h-12 font-bold uppercase tracking-widest text-lg transition-all duration-300"
+            className="loginButton w-full h-12 font-bold text-lg uppercase tracking-wider cursor-pointer  transition-all duration-300"
             style={{
               background: "linear-gradient(90deg, #00d9ff, #ff006e)",
               color: "#000",
-              boxShadow: "0 0 20px rgba(0, 217, 255, 0.3)",
+              boxShadow: "0 0 10px rgba(0, 217, 255, 0.3)",
             }}
             onMouseEnter={(e) => {
               ;(e.target as HTMLElement).style.boxShadow = "0 0 30px rgba(0, 217, 255, 0.6)"
@@ -97,7 +96,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               ;(e.target as HTMLElement).style.boxShadow = "0 0 20px rgba(0, 217, 255, 0.3)"
             }}
           >
-            INITIATE SYSTEM →
+            INITIATE SYSTEM <span className="move font-bold">&gt;</span>
           </Button>
         </div>
 
