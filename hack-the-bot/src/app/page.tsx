@@ -1,16 +1,198 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { LEVEL_DATA } from "@/src/data/words";
 import { useRouter } from "next/navigation";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import {
+  CheckCircle2,
+  Lightbulb,
+  Send,
+  Clock,
+  Target,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import Image from "next/image";
+import LoginPage from "@/src/components/login-page";
+import InstructionsPage from "@/src/components/instructions-page";
+import GamePage from "@/src/components/game-page";
+import ResultsPage from "@/src/components/results-page";
+import {Timer} from "@/src/components/timer";
+import { registerSchema } from "@/src/schemas/registerSchema";
+import { AnimatePresence, motion } from "framer-motion";
+
+interface InstructionsPageProps {
+  userName: string;
+  onStartGame: () => void;
+}
+
+interface Player {
+  name: string;
+  totalTime: number;
+}
+
+type PageState = "login" | "instructions" | "game" | "results";
 
 export default function Home() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [currentPage, setCurrentPage] = useState<PageState>("login");
   const [name, setName] = useState("");
   const [regNo, setRegNo] = useState("");
+  const [userId,setUserId] = useState("");
   const router = useRouter();
+  const [nameError, setNameError] = useState<boolean | string>("");
+  const [nameErr, setNameErr] = useState<string>("");
+  const [regNoError, setRegNoError] = useState<boolean | string>("");
+  const [regNoErr, setRegNoErr] = useState<string>("");
+  const [level, setLevel] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(80);
+  const [secretWord, setSecretWord] = useState("");
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [totalTimeTaken, setTotalTimeTaken] = useState(0);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      const res = await fetch("/api/score/list");
+      const data = await res.json();
+      setPlayers(data.scores);
+    };
+    fetchLeaderboard();
+  }, []);
+
+  useEffect(() => {
+    const handleVictory = async () => {
+      const name = localStorage.getItem("playerName");
+      const regNo = localStorage.getItem("playerReg");
+
+      try {
+        await fetch("/api/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            regNo: Number(regNo),
+            totalTime: totalTimeTaken,
+          }),
+        });
+
+        alert(`Finished in ${totalTimeTaken} seconds`);
+        setCurrentPage("results");
+      } catch {
+        alert("Score save failed");
+      }
+    };
+
+    if (level > 4) {
+      handleVictory();
+      return;
+    }
+
+    const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
+    if (!lvlData) return;
+
+    const word =
+      lvlData.words[Math.floor(Math.random() * lvlData.words.length)];
+
+    setSecretWord(word);
+    setTimeLeft(lvlData.time);
+    setMessages([
+      {
+        role: "model",
+        parts: [
+          {
+            text: `LEVEL ${level}: I have picked a word related to Tech. Ask me hints!`,
+          },
+        ],
+      },
+    ]);
+  }, [level]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleSendMessage = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMsg = { role: "user", parts: [{ text: input }] };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/guess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          history: messages,
+          secretWord,
+          difficulty: LEVEL_DATA[level as keyof typeof LEVEL_DATA].difficulty,
+          userMessage: input,
+        }),
+      });
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok || data.error) {
+        alert(data.error || "AI Error");
+        return;
+      }
+
+      if (data.reply && data.reply.includes("CORRECT")) {
+        const timeTaken =
+          LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - timeLeft;
+        setTotalTimeTaken((p) => p + timeTaken);
+
+        setTimeout(() => {
+          alert(`Level ${level} Cleared!`);
+          setLevel((p) => p + 1);
+        }, 100);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: "model", parts: [{ text: data.reply }] },
+        ]);
+      }
+    } catch {
+      setLoading(false);
+      alert("Server error");
+    }
+  };
+
+  const validateName = () => {
+    const res = registerSchema.shape.name.safeParse(name);
+    if (!res.success) {
+      setNameError(false);
+      setNameErr(res.error.issues[0].message);
+    } else {
+      setNameError(true);
+      setNameErr("");
+    }
+  };
+
+  const validateRegNo = () => {
+    const res = registerSchema.shape.regdNo.safeParse(regNo);
+    if (!res.success) {
+      setRegNoError(false);
+      setRegNoErr(res.error.issues[0].message);
+    } else {
+      setRegNoError(true);
+      setRegNoErr("");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (nameErr || regNoErr) {
+      return;
+    }
+    setLoading(true);
     // Call your existing auth service
     const res = await fetch("/services/auth", {
       method: "POST",
@@ -19,50 +201,517 @@ export default function Home() {
     });
 
     const data = await res.json();
-    
-    if (res.ok || data.status === 200 || data.status === 401) { 
+    setUserId(data.uId);
+
+    if (res.ok || data.status === 200 || data.status === 401) {
       // 200 = New User, 401 = Existing User (Both allowed to play)
       localStorage.setItem("playerName", name);
       localStorage.setItem("playerReg", regNo);
-      localStorage.setItem("UserId",data.uId);
-      router.push("/game");
+      localStorage.setItem("UserId", userId);
+      setLoading(false);
+      setCurrentPage("instructions");
     } else {
+      setLoading(false);
       alert("Login Failed: " + data.message);
     }
   };
 
+  const handleStartGame = () => {
+    setCurrentPage("game");
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white p-6">
-      <div className="max-w-md w-full bg-zinc-900 p-8 rounded-xl border border-zinc-800">
-        <h1 className="text-3xl font-bold mb-6 text-center text-green-500">Hack The Bot 🤖</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Name</label>
-            <input 
-              type="text" 
-              required
-              className="w-full p-3 bg-zinc-800 rounded border border-zinc-700 text-white focus:border-green-500 outline-none"
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Registration Number</label>
-            <input 
-              type="number" 
-              required
-              className="w-full p-3 bg-zinc-800 rounded border border-zinc-700 text-white focus:border-green-500 outline-none"
-              onChange={(e) => setRegNo(e.target.value)}
-            />
-          </div>
-          <button 
-            type="submit"
-            className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded transition"
-          >
-            ENTER GAME
-          </button>
-        </form>
+    <main className="min-h-screen min-w-screen relative overflow-hidden bg-black">
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center opacity-40"
+        style={{
+          backgroundImage: "url(/images/image.png)",
+        }}
+      />
+      <div className="fixed inset-0 z-0 bg-black/50" />
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,217,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,217,255,0.05)_1px,transparent_1px)] bg-[length:60px_60px]" />
+      </div>
+      <div className="min-h-screen z-20 flex items-center justify-center px-4 py-12">
+        {currentPage === "login" && (
+          <>
+            <div className="w-full max-w-md">
+              <div className="relative z-30 text-center mb-12">
+                <h1
+                  className="text-6xl font-black mb-2 tracking-wider animate-pulse"
+                  style={{
+                    color: "#00d9ff",
+                    textShadow: "0 0 20px rgba(0, 217, 255, 0.6)",
+                    fontFamily: "'Noto Sans JP', sans-serif",
+                  }}
+                >
+                  HACK THE BOT
+                </h1>
+                <p className="text-xl font-bold tracking-widest uppercase text-gray-400">
+                  ボットをハック
+                </p>
+                <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide">
+                  4-Level Cyberpunk Challenge
+                </p>
+              </div>
+
+              <div className="space-y-6 p-8 bg-slate-950/40 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold uppercase tracking-widest text-cyan-400">
+                    Operative Name
+                  </label>
+                  <Input
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={validateName}
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      nameError === false
+                        ? "border-red-500/50"
+                        : nameError === true
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
+                  />
+                  <AnimatePresence>
+                    {!nameError && nameErr && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        className="text-xs text-red-400 font-bold"
+                      >
+                        {nameErr}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold uppercase tracking-widest text-cyan-400">
+                    Registration ID
+                  </label>
+                  <Input
+                    placeholder="Enter your registration number"
+                    value={regNo}
+                    onChange={(e) => setRegNo(e.target.value)}
+                    onBlur={validateRegNo}
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      regNoError === false
+                        ? "border-red-500/50"
+                        : regNoError === true
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
+                  />
+                  <AnimatePresence>
+                    {!regNoError && regNoErr && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        className="text-xs text-red-400 font-bold"
+                      >
+                        {regNoErr}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <Button
+                  type="submit"
+                  onClick={handleLogin}
+                  className="loginButton w-full h-12 font-bold text-lg uppercase tracking-wider cursor-pointer  transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(90deg, #00d9ff, #ff006e)",
+                    color: "#000",
+                    boxShadow: "0 0 10px rgba(0, 217, 255, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.boxShadow =
+                      "0 0 30px rgba(0, 217, 255, 0.6)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.boxShadow =
+                      "0 0 20px rgba(0, 217, 255, 0.3)";
+                  }}
+                >{loading?"...":(<>INITIATE SYSTEM <span className="move font-bold">&gt;</span></>)}
+                </Button>
+              </div>
+
+              <div className="relative z-30 mt-8 text-center">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">
+                  システム準備完了 | Ready to enter the cyber realm
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+        {currentPage === "instructions" && (
+          <>
+            <div className="w-full max-w-3xl">
+              <div className="z-30 relative text-center mb-12">
+                <h1
+                  className="text-6xl font-black mb-2 tracking-wider animate-pulse"
+                  style={{
+                    color: "#00d9ff",
+                    textShadow: "0 0 20px rgba(0, 217, 255, 0.6)",
+                    fontFamily: "'Noto Sans JP', sans-serif",
+                  }}
+                >
+                  HACK THE BOT
+                </h1>
+                <p className="text-xl font-bold tracking-widest uppercase text-gray-400">
+                  ボットをハック
+                </p>
+                <p className="text-white text-sm">
+                  Welcome,{" "}
+                  <span className="text-cyan-400 font-bold">{name}</span> —
+                  Prepare for the challenge
+                </p>
+              </div>
+
+              <div className="space-y-6 p-8 bg-slate-950/40 border-2 border-cyan-500/30 rounded-lg backdrop-blur-sm mb-6">
+                <div className="space-y-4">
+                  {[
+                    {
+                      icon: Target,
+                      title: "Objective",
+                      desc: "Guess the hidden word at each level using hint words and AI questions",
+                      color: "#00d9ff",
+                    },
+                    {
+                      icon: Zap,
+                      title: "4 Progressive Levels",
+                      desc: "From Beginner to Expert - each level increases in difficulty",
+                      color: "#ff006e",
+                    },
+                    {
+                      icon: Lightbulb,
+                      title: "Use Hints & Questions",
+                      desc: "Hint words guide you. Ask the AI chatbot questions to narrow down options",
+                      color: "#00d9ff",
+                    },
+                    {
+                      icon: Trophy,
+                      title: "Make Your Guess",
+                      desc: "Submit your answer whenever confident. You have unlimited attempts",
+                      color: "#ff006e",
+                    },
+                  ].map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={idx}
+                        className="flex gap-4 p-4 rounded-lg bg-slate-900/20 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
+                      >
+                        <Icon
+                          className="w-6 h-6 flex-shrink-0 mt-1"
+                          style={{ color: item.color }}
+                        />
+                        <div>
+                          <h3 className="font-bold text-gray-100 uppercase tracking-wider text-sm">
+                            {item.title}
+                          </h3>
+                          <p className="text-gray-400 text-sm mt-1">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-950/40 border-2 border-pink-500/30 rounded-lg backdrop-blur-sm mb-6">
+                <h2
+                  className="text-xl font-bold mb-4 uppercase tracking-wider"
+                  style={{ color: "#ff006e" }}
+                >
+                  難易度 — Difficulty Progression & Time Limits
+                </h2>
+                <div className="space-y-3">
+                  {[
+                    {
+                      level: "Level 1",
+                      difficulty: "Beginner",
+                      desc: "Common words, obvious clues",
+                      time: "2 mins",
+                    },
+                    {
+                      level: "Level 2",
+                      difficulty: "Intermediate",
+                      desc: "Moderate vocabulary, creative hints",
+                      time: "3 mins",
+                    },
+                    {
+                      level: "Level 3",
+                      difficulty: "Advanced",
+                      desc: "Uncommon words, challenging clues",
+                      time: "5 mins",
+                    },
+                    {
+                      level: "Level 4",
+                      difficulty: "Expert",
+                      desc: "Rare words, minimal cryptic hints",
+                      time: "7 mins",
+                    },
+                  ].map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 rounded-lg bg-slate-900/20 border border-pink-500/20 hover:border-pink-500/40 transition-all"
+                    >
+                      <div>
+                        <p className="font-bold text-gray-100 text-sm">
+                          {item.level}
+                        </p>
+                        <p className="text-gray-500 text-xs">{item.desc}</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <span
+                          className="px-3 py-1 rounded-full text-xs font-bold border"
+                          style={{
+                            borderColor: "#ff006e",
+                            color: "#ff006e",
+                            backgroundColor: "rgba(255, 0, 110, 0.1)",
+                          }}
+                        >
+                          {item.difficulty}
+                        </span>
+                        <span
+                          className="px-3 py-1 rounded-full text-xs font-bold border"
+                          style={{
+                            borderColor: "#00d9ff",
+                            color: "#00d9ff",
+                            backgroundColor: "rgba(0, 217, 255, 0.1)",
+                          }}
+                        >
+                          {item.time}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-950/40 border-2 border-cyan-500/30 rounded-lg backdrop-blur-sm mb-6">
+                <h2 className="text-lg font-bold mb-4 uppercase tracking-wider text-cyan-400">
+                  Pro Tips
+                </h2>
+                <div className="space-y-2">
+                  {[
+                    "Analyze all hint words carefully - they're your primary clue",
+                    "Ask specific yes/no questions to eliminate possibilities",
+                    "Think about word categories, themes, and relationships",
+                    "Manage your time - complete levels before the timer runs out",
+                    "Each attempt is recorded - try to minimize your guesses",
+                  ].map((tip, idx) => (
+                    <div key={idx} className="flex gap-3 text-sm text-gray-300">
+                      <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-cyan-400 mt-0.5" />
+                      <span>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="relative z-30">
+                <Button
+                  onClick={handleStartGame}
+                  className="startButton cursor-pointer z-10 w-full h-12 text-lg font-bold uppercase tracking-widest transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(90deg, #00d9ff, #ff006e)",
+                    color: "#000",
+                    boxShadow: "0 0 30px rgba(0, 217, 255, 0.4)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.boxShadow =
+                      "0 0 40px rgba(0, 217, 255, 0.6)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.boxShadow =
+                      "0 0 30px rgba(0, 217, 255, 0.4)";
+                  }}
+                >
+                  START CHALLENGE <span className="move">🚀</span>
+                </Button>
+
+                <p className="text-center text-xs text-gray-500 uppercase tracking-wider mt-4">
+                  準備はいいですか? Are you ready?
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+        {currentPage === "game" && (
+          <>
+            <div className="w-full max-w-7xl flex gap-6">
+              {/* Sidebar */}
+              <div className="w-80 relative z-30 space-y-6">
+                <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
+                  <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">Piyush Mishra</p>
+                  <p className="text-center text-md font-medium tracking-tight text-gray-400">User24006</p>
+                  <p className="text-center text-xl font-semibold tracking-tight text-gray-300 mb-2">2402040022</p>
+                </div>
+                <div className="p-4 bg-slate-950/50 border border-pink-500/30 rounded-lg">
+                  <div className="text-xs uppercase tracking-widest text-pink-500">
+                    Security Level
+                  </div>
+                  <div className="text-5xl font-black text-pink-500">
+                    {level} / 4
+                  </div>
+                </div>{" "}
+                <div
+                  className="p-4 rounded-lg border-2"
+                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
+                >
+                  <div className="flex items-center gap-2 text-xs uppercase">
+                    <Clock className="w-4 h-4" /> Time Remaining
+                  </div>
+                  <div className="text-4xl font-black"><Timer time={timeLeft} /></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs uppercase text-yellow-400">
+                    <Lightbulb className="w-4 h-4" /> Hints
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Ask the AI for hints in chat
+                  </div>
+                </div>
+              </div>{" "}
+              {/* Main */}
+              <div className="flex-1 relative z-30 space-y-6">
+                <h1 className="text-5xl font-black text-cyan-400">
+                  HACK THE BOT
+                </h1>
+
+                {/* Chat */}
+                <div className="h-96 flex flex-col bg-slate-950/40 border-2 border-cyan-500/30 rounded-lg p-6">
+                  <div className="flex-1 overflow-y-auto space-y-4">
+                    {messages.map((m, i) => (
+                      <div
+                        key={i}
+                        className={`flex ${
+                          m.role === "user" ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${
+                            m.role === "user"
+                              ? "bg-pink-500/20 border border-pink-500/50"
+                              : "bg-cyan-500/20 border border-cyan-500/50"
+                          }`}
+                        >
+                          {m.parts[0].text}
+                        </div>{" "}
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="text-xs text-gray-500">AI thinking…</div>
+                    )}
+                  </div>
+
+                  {/* Input */}
+                  <div className="pt-4 border-t border-cyan-500/20 flex gap-2">
+                    <Input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleSendMessage()
+                      }
+                      placeholder="Ask or guess…"
+                      disabled={loading}
+                    />
+                    <Button onClick={handleSendMessage} disabled={loading}>
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        {currentPage === "results" && (
+          <>
+            {" "}
+            <div className="w-full max-w-4xl">
+              {/* Header */}
+              <div className="relative z-30 text-center mb-12">
+                <div className="flex justify-center mb-4">
+                  <Trophy className="w-16 h-16" style={{ color: "#ff006e" }} />
+                </div>
+                <h1
+                  className="text-6xl font-black mb-2 tracking-wider"
+                  style={{
+                    color: "#00d9ff",
+                    textShadow: "0 0 20px rgba(0, 217, 255, 0.6)",
+                  }}
+                >
+                  LEADERBOARD
+                </h1>
+                <p className="text-gray-400 uppercase tracking-widest">
+                  Top Hackers Ranked by Time
+                </p>
+              </div>{" "}
+              {/* Leaderboard List */}
+              <div className="relative z-30 space-y-4 mb-12">
+                {players.map((player, idx) => (
+                  <div
+                    key={idx}
+                    className="p-6 bg-slate-950/40 border-2 rounded-lg flex items-center justify-between"
+                    style={{
+                      borderColor: "rgba(0, 217, 255, 0.3)",
+                      backgroundColor: "rgba(0, 217, 255, 0.05)",
+                    }}
+                  >
+                    <div className="flex items-center gap-6">
+                      <div
+                        className="text-4xl font-black"
+                        style={{ color: "#ff006e" }}
+                      >
+                        #{idx + 1}
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-gray-100">
+                          {player.name}
+                        </p>{" "}
+                        <p className="text-xs text-gray-400 uppercase tracking-widest">
+                          Operative
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5" style={{ color: "#00d9ff" }} />
+                      <p
+                        className="text-2xl font-black"
+                        style={{ color: "#00d9ff" }}
+                      >
+                        {formatTime(player.totalTime)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Footer */}
+              <div className="relative z-30 text-center">
+                <Button
+                  onClick={() => setCurrentPage("login")}
+                  className="px-12 h-12 cursor-pointer font-bold uppercase tracking-widest text-lg"
+                  style={{
+                    background: "linear-gradient(90deg, #00d9ff, #ff006e)",
+                    color: "#000",
+                    boxShadow: "0 0 30px rgba(0, 217, 255, 0.4)",
+                  }}
+                >
+                  RETURN TO MAIN MENU
+                </Button>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mt-6">
+                  HACK THE BOT | Rankings
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );
 }
-

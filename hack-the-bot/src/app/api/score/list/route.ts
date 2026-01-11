@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/db";
+import clientPromise from "@/src/lib/db";
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export async function GET() {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/db";
+import clientPromise from "@/src/lib/db";
 
 // Note: "export default" use mat karna, "export async function" use karo
 export async function POST(req: Request) {

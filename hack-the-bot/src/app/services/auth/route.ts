@@ -1,6 +1,6 @@
-import clientPromise from "@/lib/db";
+import clientPromise from "@/src/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { users } from "@/lib/schema";
+import { users } from "@/src/lib/schema";
 
 export async function POST(req: NextRequest) {
   try {

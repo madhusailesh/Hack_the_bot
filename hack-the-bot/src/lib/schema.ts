@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/db";
+import clientPromise from "@/src/lib/db";
 import {Collection} from "mongodb";
 
 const connection = await clientPromise;
