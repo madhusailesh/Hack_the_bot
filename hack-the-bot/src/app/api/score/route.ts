@@ -1,32 +1,36 @@
 import { NextResponse } from "next/server";
+import {scores, scoreSheetOutbox} from "@/src/lib/schema";
 import clientPromise from "@/src/lib/db";
 
-// Note: "export default" use mat karna, "export async function" use karo
 export async function POST(req: Request) {
+  const client = await clientPromise;
+  const session = client.startSession();
   try {
     const body = await req.json();
-     
-    if (!clientPromise) {
-      console.log("⚠️ Offline Mode: Score received but not saved to DB:", body);
-      return NextResponse.json({ message: "Score processed (Offline Mode)" });
-    }
 
-    // 2. Real DB Logic
-    const client = await clientPromise;
-    const db = client.db("hackthebot"); // Apna DB naam check kar lena
-    
-    // Score save karna
-    await db.collection("scores").insertOne({
-      name: body.name,
-      regNo: body.regNo,
-      totalTime: body.totalTime,
-      timestamp: new Date()
+    await session.withTransaction(async ()=>{
+      const result = await scores.insertOne({
+        name:body.name,
+        regNo:body.regNo,
+        userId:body.userId,
+        totalTime:body.totalTime,
+        timestamp:new Date()
+      },{session});
+
+      await scoreSheetOutbox.insertOne({
+        type:"SCORE_INSERTED",
+        scoreId:result.insertedId,
+        processed:false,
+        createdAt:new Date()
+      },{session});
     });
 
-    return NextResponse.json({ message: "Score Saved Successfully!" });
+    return NextResponse.json({ message: "Score Saved And Queued for spreadsheet sync." },{status:200});
 
-  } catch (e) {
+  } catch (e:any) {
     console.error("Score Save Error:", e);
-    return NextResponse.json({ error: "Failed to save score" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save score" }, { status: e.status || 500 });
+  }finally{
+    await session.endSession();
   }
 }

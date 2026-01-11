@@ -1,29 +1,20 @@
-import clientPromise from "@/src/lib/db";
+import {scores} from "@/src/lib/schema";
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
-export async function GET() {
-  // Agar DB connected nahi hai (Offline Mode)
-  if (!clientPromise) {
-    return NextResponse.json({
-      scores: [
-        { name: "Demo User 1", regNo: 123, totalTime: 120 },
-        { name: "Demo User 2", regNo: 456, totalTime: 140 },
-      ],
-    });
-  }
 
+export const dynamic = "force-dynamic";
+
+export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db("hackthebot");
     
-    const scores = await db.collection("scores")
+    const scoreRecord = await scores
       .find({})
       .sort({ totalTime: 1 })
       .limit(10)
       .toArray();
 
-    return NextResponse.json({ scores });
-  } catch (error) {
-    return NextResponse.json({ scores: [] });
+    return NextResponse.json({ scoreRecord },{status:200});
+  } catch (error:any) {
+    console.error(error);
+    return NextResponse.json({ scores: [] },{status:error.status || 500});
   }
 }
