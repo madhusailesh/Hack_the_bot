@@ -72,8 +72,9 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name,
+            name:name,
             regNo: Number(regNo),
+            userId:userId,
             totalTime: totalTimeTaken,
           }),
         });
@@ -547,9 +548,9 @@ export default function Home() {
               {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
-                  <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">Piyush Mishra</p>
-                  <p className="text-center text-md font-medium tracking-tight text-gray-400">User24006</p>
-                  <p className="text-center text-xl font-semibold tracking-tight text-gray-300 mb-2">2402040022</p>
+                  <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">{name}</p>
+                  <p className="text-center text-md font-medium tracking-tight text-gray-400">{userId}</p>
+                  <p className="text-center text-xl font-semibold tracking-tight text-gray-300 mb-2">{regNo}</p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-pink-500/30 rounded-lg">
                   <div className="text-xs uppercase tracking-widest text-pink-500">
