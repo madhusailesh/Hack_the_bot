@@ -2,23 +2,23 @@
 
 import {useState,useEffect} from "react";
 import {useRouter} from "next/navigation";
+import {PageState} from "@/src/app/page";
 
-export function Timer(props:{time:number}){
-    const [timeLeft,setTimeLeft]=useState(props.time);
+export function Timer(props:{time:number,setCurrentPage:React.Dispatch<React.SetStateAction<PageState>>,setTimeLeft:React.Dispatch<React.SetStateAction<number>>}){
+    const setCurrentPage = props.setCurrentPage;
     const router = useRouter();
 
     useEffect(()=>{
-        if(timeLeft<=0){
-            alert("Time Up! Game Over.");
-            router.replace("/");
+        if((props.time)<=0){
+            setCurrentPage("results");
             return;
         }
 
-        const timer = setInterval(()=>setTimeLeft((prev)=>prev-1),1000);
+        const timer = setInterval(()=>props.setTimeLeft((prev)=>prev-1),1000);
         return ()=>clearInterval(timer);
-    },[timeLeft]);
+    },[props.time]);
 
     return(
-        <span>{timeLeft}</span>
+        <span>{props.time}</span>
     );
 }

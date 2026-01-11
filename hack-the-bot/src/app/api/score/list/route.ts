@@ -12,7 +12,11 @@ export async function GET() {
       .limit(10)
       .toArray();
 
-    return NextResponse.json({ scoreRecord },{status:200});
+      if(!scoreRecord){
+        return NextResponse.json({scores:[]},{status:400});
+      }
+
+    return NextResponse.json({ scores:scoreRecord },{status:200});
   } catch (error:any) {
     console.error(error);
     return NextResponse.json({ scores: [] },{status:error.status || 500});

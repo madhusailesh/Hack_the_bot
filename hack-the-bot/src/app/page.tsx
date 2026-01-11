@@ -18,9 +18,10 @@ import LoginPage from "@/src/components/login-page";
 import InstructionsPage from "@/src/components/instructions-page";
 import GamePage from "@/src/components/game-page";
 import ResultsPage from "@/src/components/results-page";
-import {Timer} from "@/src/components/timer";
+import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
+import { TailSpin } from "react-loader-spinner";
 
 interface InstructionsPageProps {
   userName: string;
@@ -32,21 +33,21 @@ interface Player {
   totalTime: number;
 }
 
-type PageState = "login" | "instructions" | "game" | "results";
+export type PageState = "login" | "instructions" | "game" | "results";
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPage, setCurrentPage] = useState<PageState>("login");
   const [name, setName] = useState("");
   const [regNo, setRegNo] = useState("");
-  const [userId,setUserId] = useState("");
+  const [userId, setUserId] = useState("");
   const router = useRouter();
   const [nameError, setNameError] = useState<boolean | string>("");
   const [nameErr, setNameErr] = useState<string>("");
   const [regNoError, setRegNoError] = useState<boolean | string>("");
   const [regNoErr, setRegNoErr] = useState<string>("");
   const [level, setLevel] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(80);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [secretWord, setSecretWord] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -57,7 +58,7 @@ export default function Home() {
     const fetchLeaderboard = async () => {
       const res = await fetch("/api/score/list");
       const data = await res.json();
-      setPlayers(data.scores);
+      setPlayers(Array.isArray(data.scores)?data.scores:[]);
     };
     fetchLeaderboard();
   }, []);
@@ -72,9 +73,9 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name:name,
+            name: name,
             regNo: Number(regNo),
-            userId:userId,
+            userId: userId,
             totalTime: totalTimeTaken,
           }),
         });
@@ -104,7 +105,7 @@ export default function Home() {
         role: "model",
         parts: [
           {
-            text: `LEVEL ${level}: I have picked a word related to Tech. Ask me hints!`,
+            text: `I have picked a word related to Tech. Ask me hints!`,
           },
         ],
       },
@@ -266,13 +267,12 @@ export default function Home() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onBlur={validateName}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
-                      nameError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${nameError === false
                         ? "border-red-500/50"
                         : nameError === true
-                        ? "border-green-500/50"
-                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                    }`}
+                          ? "border-green-500/50"
+                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      }`}
                   />
                   <AnimatePresence>
                     {!nameError && nameErr && (
@@ -297,13 +297,12 @@ export default function Home() {
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
                     onBlur={validateRegNo}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
-                      regNoError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${regNoError === false
                         ? "border-red-500/50"
                         : regNoError === true
-                        ? "border-green-500/50"
-                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                    }`}
+                          ? "border-green-500/50"
+                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      }`}
                   />
                   <AnimatePresence>
                     {!regNoError && regNoErr && (
@@ -336,7 +335,15 @@ export default function Home() {
                     (e.target as HTMLElement).style.boxShadow =
                       "0 0 20px rgba(0, 217, 255, 0.3)";
                   }}
-                >{loading?"...":(<>INITIATE SYSTEM <span className="move font-bold">&gt;</span></>)}
+                >
+                  {loading ? (
+                    <TailSpin height={19} width={19} strokeWidth={10} color="#00d9ff" />
+                  ) : (
+                    <>
+                      INITIATE SYSTEM{" "}
+                      <span className="move font-bold">&gt;</span>
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -548,9 +555,15 @@ export default function Home() {
               {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
-                  <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">{name}</p>
-                  <p className="text-center text-md font-medium tracking-tight text-gray-400">{userId}</p>
-                  <p className="text-center text-xl font-semibold tracking-tight text-gray-300 mb-2">{regNo}</p>
+                  <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">
+                    {name}
+                  </p>
+                  <p className="text-center text-md font-medium tracking-tight text-gray-400">
+                    {userId}
+                  </p>
+                  <p className="text-center text-xl font-semibold tracking-tight text-gray-300 mb-2">
+                    {regNo}
+                  </p>
                 </div>
                 <div className="p-4 bg-slate-950/50 border border-pink-500/30 rounded-lg">
                   <div className="text-xs uppercase tracking-widest text-pink-500">
@@ -567,7 +580,9 @@ export default function Home() {
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
                   </div>
-                  <div className="text-4xl font-black"><Timer time={timeLeft} /></div>
+                  <div className="text-4xl font-black">
+                    <Timer time={timeLeft} setCurrentPage={setCurrentPage} setTimeLeft={setTimeLeft} />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs uppercase text-yellow-400">
@@ -590,16 +605,14 @@ export default function Home() {
                     {messages.map((m, i) => (
                       <div
                         key={i}
-                        className={`flex ${
-                          m.role === "user" ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
+                          }`}
                       >
                         <div
-                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${
-                            m.role === "user"
+                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${m.role === "user"
                               ? "bg-pink-500/20 border border-pink-500/50"
                               : "bg-cyan-500/20 border border-cyan-500/50"
-                          }`}
+                            }`}
                         >
                           {m.parts[0].text}
                         </div>{" "}
@@ -653,44 +666,43 @@ export default function Home() {
                 </p>
               </div>{" "}
               {/* Leaderboard List */}
-              <div className="relative z-30 space-y-4 mb-12">
-                {players.map((player, idx) => (
-                  <div
-                    key={idx}
-                    className="p-6 bg-slate-950/40 border-2 rounded-lg flex items-center justify-between"
-                    style={{
-                      borderColor: "rgba(0, 217, 255, 0.3)",
-                      backgroundColor: "rgba(0, 217, 255, 0.05)",
-                    }}
-                  >
-                    <div className="flex items-center gap-6">
-                      <div
-                        className="text-4xl font-black"
-                        style={{ color: "#ff006e" }}
-                      >
-                        #{idx + 1}
-                      </div>
-                      <div>
-                        <p className="text-xl font-bold text-gray-100">
-                          {player.name}
-                        </p>{" "}
-                        <p className="text-xs text-gray-400 uppercase tracking-widest">
-                          Operative
-                        </p>
-                      </div>
+              <div className="relative z-30 space-y-4 mb-12">{players?.length == 0 ? (<div className="flex justify-center"><TailSpin height={24} width={24} strokeWidth={10} color="#00d9ff" /></div>) : (<>{players.map((player, idx) => (
+                <div
+                  key={idx}
+                  className="p-6 bg-slate-950/40 border-2 rounded-lg flex items-center justify-between"
+                  style={{
+                    borderColor: "rgba(0, 217, 255, 0.3)",
+                    backgroundColor: "rgba(0, 217, 255, 0.05)",
+                  }}
+                >
+                  <div className="flex items-center gap-6">
+                    <div
+                      className="text-4xl font-black"
+                      style={{ color: "#ff006e" }}
+                    >
+                      #{idx + 1}
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5" style={{ color: "#00d9ff" }} />
-                      <p
-                        className="text-2xl font-black"
-                        style={{ color: "#00d9ff" }}
-                      >
-                        {formatTime(player.totalTime)}
+                    <div>
+                      <p className="text-xl font-bold text-gray-100">
+                        {player.name}
+                      </p>{" "}
+                      <p className="text-xs text-gray-400 uppercase tracking-widest">
+                        Operative
                       </p>
                     </div>
                   </div>
-                ))}
+
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5" style={{ color: "#00d9ff" }} />
+                    <p
+                      className="text-2xl font-black"
+                      style={{ color: "#00d9ff" }}
+                    >
+                      {formatTime(player.totalTime)}
+                    </p>
+                  </div>
+                </div>
+              ))}</>)}
               </div>
               {/* Footer */}
               <div className="relative z-30 text-center">
