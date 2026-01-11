@@ -2,29 +2,31 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
-let clientPromise: Promise<MongoClient> | null = null;
 
 if (!uri) {
-  // Agar URI nahi hai, toh bas warning do, error nahi
-  console.warn("⚠️ MONGODB_URI is missing. Database features will be disabled.");
-} else {
-  // Agar URI hai, toh connect karo
-  const options = {};
-  
-  if (process.env.NODE_ENV === "development") {
-    const globalWithMongo = global as typeof globalThis & {
-      _mongoClientPromise?: Promise<MongoClient>;
-    };
-    if (!globalWithMongo._mongoClientPromise) {
-      const client = new MongoClient(uri, options);
-      globalWithMongo._mongoClientPromise = client.connect();
-    }
-    clientPromise = globalWithMongo._mongoClientPromise;
-  } else {
-    const client = new MongoClient(uri, options);
-    clientPromise = client.connect();
-  }
+  throw new Error("❌ MONGODB_URI is not defined");
 }
 
-// Important: Ab ye null bhi return kar sakta hai
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
+const options = {};
+
+if (process.env.NODE_ENV === "development") {
+  // Dev mode: global cache (hot reload safe)
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  // Production: NEW connection per cold start (Vercel friendly)
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
 export default clientPromise;
