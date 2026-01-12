@@ -53,6 +53,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalTimeTaken, setTotalTimeTaken] = useState(0);
+  const [guesses,setGuesses] = useState<number>(0);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -92,7 +93,7 @@ export default function Home() {
       return;
     }
 
-    const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
+    const lvlData = LEVEL_DATA[(level+1) as keyof typeof LEVEL_DATA];
     if (!lvlData) return;
 
     const word =
@@ -575,7 +576,7 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining

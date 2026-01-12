@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { history, secretWord, difficulty, userMessage } = await req.json();
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const chat = model.startChat({
       history: [
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     const response = result.response.text();
 
     return NextResponse.json({ reply: response });
-  } catch (error) {
+  } catch (error:any) {
+    console.error(error);
     return NextResponse.json({ error: "AI Failed" }, { status: 500 });
   }
 }
