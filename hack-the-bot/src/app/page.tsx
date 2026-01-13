@@ -22,6 +22,7 @@ import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
+import toast, { Toaster } from 'react-hot-toast';
 
 interface InstructionsPageProps {
   userName: string;
@@ -58,7 +59,7 @@ export default function Home() {
     const fetchLeaderboard = async () => {
       const res = await fetch("/api/score/list");
       const data = await res.json();
-      setPlayers(Array.isArray(data.scores)?data.scores:[]);
+      setPlayers(Array.isArray(data.scores) ? data.scores : []);
     };
     fetchLeaderboard();
   }, []);
@@ -80,10 +81,32 @@ export default function Home() {
           }),
         });
 
-        alert(`Finished in ${totalTimeTaken} seconds`);
+        // ✅ REPLACED ALERT WITH TOAST
+        toast.success(`MISSION COMPLETE: Time ${totalTimeTaken}s`, {
+          duration: 4000,
+          style: {
+            border: '1px solid #00d9ff',
+            padding: '16px',
+            color: '#00d9ff',
+            background: '#000',
+            fontFamily: 'monospace',
+          },
+          iconTheme: {
+            primary: '#00d9ff',
+            secondary: '#000',
+          },
+        });
+        
         setCurrentPage("results");
       } catch {
-        alert("Score save failed");
+        // ✅ REPLACED ALERT WITH TOAST
+        toast.error("DATA CORRUPTION: Score save failed", {
+          style: {
+            border: '1px solid #ff006e',
+            background: '#0f172a',
+            color: '#ff006e',
+          }
+        });
       }
     };
 
@@ -141,7 +164,14 @@ export default function Home() {
       setLoading(false);
 
       if (!res.ok || data.error) {
-        alert(data.error || "AI Error");
+        // ✅ REPLACED ALERT WITH TOAST
+        toast.error(data.error || "SYSTEM MALFUNCTION: AI Error", {
+            style: {
+                border: '1px solid #ff006e',
+                background: '#0f172a',
+                color: '#ff006e',
+            }
+        });
         return;
       }
 
@@ -151,7 +181,19 @@ export default function Home() {
         setTotalTimeTaken((p) => p + timeTaken);
 
         setTimeout(() => {
-          alert(`Level ${level} Cleared!`);
+          // ✅ REPLACED ALERT WITH TOAST
+          toast.success(`SYSTEM HACKED: Level ${level} Cleared!`, {
+            style: {
+              border: '1px solid #00d9ff',
+              padding: '16px',
+              color: '#00d9ff',
+              background: '#0f172a',
+            },
+            iconTheme: {
+              primary: '#00d9ff',
+              secondary: '#fff',
+            },
+          });
           setLevel((p) => p + 1);
         }, 100);
       } else {
@@ -162,7 +204,14 @@ export default function Home() {
       }
     } catch {
       setLoading(false);
-      alert("Server error");
+      // ✅ REPLACED ALERT WITH TOAST
+      toast.error("CONNECTION LOST: Server error", {
+        style: {
+            border: '1px solid #ff006e',
+            background: '#0f172a',
+            color: '#ff006e',
+        }
+      });
     }
   };
 
@@ -214,7 +263,19 @@ export default function Home() {
       setCurrentPage("instructions");
     } else {
       setLoading(false);
-      alert("Login Failed: " + data.message);
+      // ✅ REPLACED ALERT WITH TOAST
+      toast.error("ACCESS DENIED: " + data.message, {
+        style: {
+          border: '1px solid #ff006e',
+          padding: '16px',
+          color: '#ff006e',
+          background: '#0f172a',
+        },
+        iconTheme: {
+          primary: '#ff006e',
+          secondary: '#fff',
+        },
+      });
     }
   };
 
@@ -724,6 +785,7 @@ export default function Home() {
             </div>
           </>
         )}
+        <Toaster position="top-center" reverseOrder={false} />
       </div>
     </main>
   );

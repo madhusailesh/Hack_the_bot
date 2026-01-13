@@ -26,9 +26,13 @@ export async function POST(req: NextRequest) {
     const user = await users.findOne({ regd_no: regd_no });
 
     if (user) {
+      
       return NextResponse.json(
-        { message: "Credential exists" },
-        { status: 409 }
+        { 
+          message: "User logged in", 
+          uId: user.uId 
+        },
+        { status: 200 }
       );
     }
 
