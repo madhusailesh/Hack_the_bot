@@ -23,7 +23,8 @@ import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
 import toast, { Toaster } from 'react-hot-toast';
-
+import GameOverModal from "@/src/components/game-over-modal";
+import CongratulationsModal from "@/src/components/congratulations-modal";
 interface InstructionsPageProps {
   userName: string;
   onStartGame: () => void;
@@ -54,11 +55,11 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalTimeTaken, setTotalTimeTaken] = useState(0);
-  const [guesses,setGuesses] = useState<number>(0);
-  const [showCongrats,setShowCongrats] = useState<boolean>(false);
-  const [showGameOver , setShowGameOver] = useState<boolean>(false);
+  const [guesses, setGuesses] = useState<number>(0);
+  const [showCongrats, setShowCongrats] = useState<boolean>(false);
+  const [showGameOver, setShowGameOver] = useState<boolean>(false);
 
-  const levelHints = {1:"I've picked a place you'll find inside our university campus.",2:"This comes from the world of anime and its characters.",3:"I've picked the name of a well-known company.",4:"I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state."};
+  const levelHints = { 1: "I've picked a place you'll find inside our university campus.", 2: "This comes from the world of anime and its characters.", 3: "I've picked the name of a well-known company.", 4: "I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state." };
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -83,7 +84,7 @@ export default function Home() {
             regNo: Number(regNo),
             userId: userId,
             totalTime: totalTimeTaken,
-            totalGueses:guesses
+            totalGueses: guesses
           }),
         });
 
@@ -102,7 +103,7 @@ export default function Home() {
             secondary: '#000',
           },
         });
-        
+
         setCurrentPage("results");
       } catch {
         // ✅ REPLACED ALERT WITH TOAST
@@ -169,23 +170,23 @@ export default function Home() {
       });
       const data = await res.json();
       setLoading(false);
-      setGuesses((prev)=>prev+1);
+      setGuesses((prev) => prev + 1);
 
       if (!res.ok || data.error) {
         // ✅ REPLACED ALERT WITH TOAST
         toast.error(data.error || "SYSTEM MALFUNCTION: AI Error", {
-            style: {
-                border: '1px solid #ff006e',
-                background: '#0f172a',
-                color: '#ff006e',
-            }
+          style: {
+            border: '1px solid #ff006e',
+            background: '#0f172a',
+            color: '#ff006e',
+          }
         });
         return;
       }
 
       if (data.reply && data.reply.includes("CORRECT")) {
-       const timeTaken =
-  LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
+        const timeTaken =
+          LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
 
         setTotalTimeTaken((p) => p + timeTaken);
         setShowCongrats(true);
@@ -216,9 +217,9 @@ export default function Home() {
       // ✅ REPLACED ALERT WITH TOAST
       toast.error("CONNECTION LOST: Server error", {
         style: {
-            border: '1px solid #ff006e',
-            background: '#0f172a',
-            color: '#ff006e',
+          border: '1px solid #ff006e',
+          background: '#0f172a',
+          color: '#ff006e',
         }
       });
     }
@@ -339,10 +340,10 @@ export default function Home() {
                     onChange={(e) => setName(e.target.value)}
                     onBlur={validateName}
                     className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${nameError === false
-                        ? "border-red-500/50"
-                        : nameError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      ? "border-red-500/50"
+                      : nameError === true
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
                       }`}
                   />
                   <AnimatePresence>
@@ -369,10 +370,10 @@ export default function Home() {
                     onChange={(e) => setRegNo(e.target.value)}
                     onBlur={validateRegNo}
                     className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${regNoError === false
-                        ? "border-red-500/50"
-                        : regNoError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      ? "border-red-500/50"
+                      : regNoError === true
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
                       }`}
                   />
                   <AnimatePresence>
@@ -625,14 +626,14 @@ export default function Home() {
         {currentPage === "game" && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
-              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
+              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={() => { setCurrentPage("results"); }} />
               <CongratulationsModal
-              isOpen={showCongrats}
-              level={level}
-              secretWord={secretWord}
-              userName={name}
-              attempts={guesses}
-              timeUsed={totalTimeTaken}
+                isOpen={showCongrats}
+                level={level}
+                secretWord={secretWord}
+                userName={name}
+                attempts={guesses}
+                timeUsed={totalTimeTaken}
               />
               {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
@@ -657,7 +658,11 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{
+                    borderColor:
+                      timeLeft !== null && timeLeft < 10 ? "#ff006e" : "#00d9ff"
+                  }}
+
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
@@ -692,8 +697,8 @@ export default function Home() {
                       >
                         <div
                           className={`max-w-sm px-4 py-3 rounded-lg text-sm ${m.role === "user"
-                              ? "bg-pink-500/20 border border-pink-500/50"
-                              : "bg-cyan-500/20 border border-cyan-500/50"
+                            ? "bg-pink-500/20 border border-pink-500/50"
+                            : "bg-cyan-500/20 border border-cyan-500/50"
                             }`}
                         >
                           {m.parts[0].text}
