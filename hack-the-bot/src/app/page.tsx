@@ -22,9 +22,9 @@ import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
-import CongratulationsModal from "@/src/components/congratulations-modal";
+import toast, { Toaster } from 'react-hot-toast';
 import GameOverModal from "@/src/components/game-over-modal";
-
+import CongratulationsModal from "@/src/components/congratulations-modal";
 interface InstructionsPageProps {
   userName: string;
   onStartGame: () => void;
@@ -71,6 +71,7 @@ export default function Home() {
       const res = await fetch("/api/score/list");
       const data = await res.json();
       setPlayers(Array.isArray(data.scores) ? data.scores : []);
+      setPlayers(Array.isArray(data.scores) ? data.scores : []);
     };
     fetchLeaderboard();
   }, [level]);
@@ -89,12 +90,21 @@ export default function Home() {
             regNo: Number(regNo),
             userId: userId,
             totalTime: totalTimeTaken,
-            totalGueses: guesses,
+            totalGueses:guesses
           }),
         });
-        setCurrentPage("results");
+
+        setShowCongrats(true);
+        setTimeout(()=>{setShowCongrats(false);setCurrentPage("results");},5000);
       } catch {
-        alert("Score save failed");
+        // ✅ REPLACED ALERT WITH TOAST
+        toast.error("DATA CORRUPTION: Score save failed", {
+          style: {
+            border: '1px solid #ff006e',
+            background: '#0f172a',
+            color: '#ff006e',
+          }
+        });
       }
     };
 
@@ -155,23 +165,27 @@ export default function Home() {
       setGuesses((prev) => prev + 1);
 
       if (!res.ok || data.error) {
-        alert(data.error || "AI Error");
+        // ✅ REPLACED ALERT WITH TOAST
+        toast.error(data.error || "SYSTEM MALFUNCTION: AI Error", {
+          style: {
+            border: '1px solid #ff006e',
+            background: '#0f172a',
+            color: '#ff006e',
+          }
+        });
         return;
       }
 
       if (data.reply && data.reply.includes("CORRECT")) {
         const timeTaken =
-          LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - timeLeft;
+          LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
+
         setTotalTimeTaken((p) => p + timeTaken);
-        if (level < 4) {
-          setShowCongrats(true);
-          setTimeout(() => {
-            setShowCongrats(false);
-            setLevel((p) => p + 1);
-          }, 5000);
-        }else{
-          setLevel((p)=>p+1);
-        }
+        setShowCongrats(true);
+        setTimeout(() => {
+          setShowCongrats(false);
+          setLevel((p) => p + 1);
+        }, 5000);
       } else {
         setMessages((prev) => [
           ...prev,
@@ -180,7 +194,14 @@ export default function Home() {
       }
     } catch {
       setLoading(false);
-      alert("Server error");
+      // ✅ REPLACED ALERT WITH TOAST
+      toast.error("CONNECTION LOST: Server error", {
+        style: {
+          border: '1px solid #ff006e',
+          background: '#0f172a',
+          color: '#ff006e',
+        }
+      });
     }
   };
 
@@ -232,7 +253,19 @@ export default function Home() {
       setCurrentPage("instructions");
     } else {
       setLoading(false);
-      alert("Login Failed: " + data.message);
+      // ✅ REPLACED ALERT WITH TOAST
+      toast.error("ACCESS DENIED: " + data.message, {
+        style: {
+          border: '1px solid #ff006e',
+          padding: '16px',
+          color: '#ff006e',
+          background: '#0f172a',
+        },
+        iconTheme: {
+          primary: '#ff006e',
+          secondary: '#fff',
+        },
+      });
     }
   };
 
@@ -285,13 +318,12 @@ export default function Home() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onBlur={validateName}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
-                      nameError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${nameError === false
                         ? "border-red-500/50"
                         : nameError === true
-                        ? "border-green-500/50"
-                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                    }`}
+                          ? "border-green-500/50"
+                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      }`}
                   />
                   <AnimatePresence>
                     {!nameError && nameErr && (
@@ -316,13 +348,12 @@ export default function Home() {
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
                     onBlur={validateRegNo}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
-                      regNoError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${regNoError === false
                         ? "border-red-500/50"
                         : regNoError === true
-                        ? "border-green-500/50"
-                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                    }`}
+                          ? "border-green-500/50"
+                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                      }`}
                   />
                   <AnimatePresence>
                     {!regNoError && regNoErr && (
@@ -579,17 +610,7 @@ export default function Home() {
         {currentPage === "game" && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
-              <GameOverModal
-                isOpen={showGameOver}
-                level={level}
-                secretWord={secretWord}
-                userName={name}
-                attempts={guesses}
-                timeUsed={totalTimeTaken}
-                onViewResults={() => {
-                  setCurrentPage("results");
-                }}
-              />
+              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
               <CongratulationsModal
                 isOpen={showCongrats}
                 level={level}
@@ -621,7 +642,7 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
@@ -661,11 +682,10 @@ export default function Home() {
                         }`}
                       >
                         <div
-                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${
-                            m.role === "user"
+                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${m.role === "user"
                               ? "bg-pink-500/20 border border-pink-500/50"
                               : "bg-cyan-500/20 border border-cyan-500/50"
-                          }`}
+                            }`}
                         >
                           {m.parts[0].text}
                         </div>{" "}
@@ -795,6 +815,7 @@ export default function Home() {
             </div>
           </>
         )}
+        <Toaster position="top-center" reverseOrder={false} />
       </div>
     </main>
   );
