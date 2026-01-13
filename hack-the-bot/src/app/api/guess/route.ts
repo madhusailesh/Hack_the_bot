@@ -34,12 +34,11 @@ const GEMINI_API_KEYS: string[] = [
   process.env.GEMINI_API_KEY_29,
 ].filter((key): key is string => Boolean(key));
 
-const api = GEMINI_API_KEYS[Math.floor(Math.random()*GEMINI_API_KEYS.length)];
-
-const genAI = new GoogleGenerativeAI(api);
-
 export async function POST(req: Request) {
   try {
+    const api = GEMINI_API_KEYS[Math.floor(Math.random()*GEMINI_API_KEYS.length)];
+
+    const genAI = new GoogleGenerativeAI(api);
     const { history, secretWord, difficulty, userMessage,themeInformation } = await req.json();
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });

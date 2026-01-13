@@ -55,20 +55,25 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalTimeTaken, setTotalTimeTaken] = useState(0);
-  const [guesses,setGuesses] = useState<number>(0);
-  const [showCongrats,setShowCongrats] = useState<boolean>(false);
-  const [showGameOver , setShowGameOver] = useState<boolean>(false);
+  const [guesses, setGuesses] = useState<number>(0);
+  const [showCongrats, setShowCongrats] = useState<boolean>(false);
+  const [showGameOver, setShowGameOver] = useState<boolean>(false);
 
-  const levelHints = {1:"I've picked a place you'll find inside our university campus.",2:"This comes from the world of anime and its characters.",3:"I've picked the name of a well-known company.",4:"I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state."};
+  const levelHints = {
+    1: "I've picked a place you'll find inside our university campus.",
+    2: "This comes from the world of anime and its characters.",
+    3: "I've picked the name of a well-known company.",
+    4: "I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state.",
+  };
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       const res = await fetch("/api/score/list");
       const data = await res.json();
-      setPlayers(Array.isArray(data.scores)?data.scores:[]);
+      setPlayers(Array.isArray(data.scores) ? data.scores : []);
     };
     fetchLeaderboard();
-  }, []);
+  }, [level]);
 
   useEffect(() => {
     const handleVictory = async () => {
@@ -84,12 +89,10 @@ export default function Home() {
             regNo: Number(regNo),
             userId: userId,
             totalTime: totalTimeTaken,
-            totalGueses:guesses
+            totalGueses: guesses,
           }),
         });
-
-        setShowCongrats(true);
-        setTimeout(()=>{setShowCongrats(false);setCurrentPage("results");},5000);
+        setCurrentPage("results");
       } catch {
         alert("Score save failed");
       }
@@ -100,7 +103,7 @@ export default function Home() {
       return;
     }
 
-    const lvlData = LEVEL_DATA[(level) as keyof typeof LEVEL_DATA];
+    const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
     if (!lvlData) return;
 
     const word =
@@ -143,12 +146,13 @@ export default function Home() {
           secretWord,
           difficulty: LEVEL_DATA[level as keyof typeof LEVEL_DATA].difficulty,
           userMessage: input,
-          themeInformation: LEVEL_DATA[level as keyof typeof LEVEL_DATA].themeInformation
+          themeInformation:
+            LEVEL_DATA[level as keyof typeof LEVEL_DATA].themeInformation,
         }),
       });
       const data = await res.json();
       setLoading(false);
-      setGuesses((prev)=>prev+1);
+      setGuesses((prev) => prev + 1);
 
       if (!res.ok || data.error) {
         alert(data.error || "AI Error");
@@ -159,11 +163,15 @@ export default function Home() {
         const timeTaken =
           LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - timeLeft;
         setTotalTimeTaken((p) => p + timeTaken);
-        setShowCongrats(true);
-        setTimeout(() => {
-          setShowCongrats(false);
-          setLevel((p) => p + 1);
-        }, 5000);
+        if (level < 4) {
+          setShowCongrats(true);
+          setTimeout(() => {
+            setShowCongrats(false);
+            setLevel((p) => p + 1);
+          }, 5000);
+        }else{
+          setLevel((p)=>p+1);
+        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -245,7 +253,6 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,217,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,217,255,0.05)_1px,transparent_1px)] bg-[length:60px_60px]" />
       </div>
       <div className="min-h-screen z-20 flex items-center justify-center px-4 py-12">
-
         {currentPage === "login" && (
           <>
             <div className="w-full max-w-md">
@@ -278,12 +285,13 @@ export default function Home() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onBlur={validateName}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${nameError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      nameError === false
                         ? "border-red-500/50"
                         : nameError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                      }`}
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
                   />
                   <AnimatePresence>
                     {!nameError && nameErr && (
@@ -308,12 +316,13 @@ export default function Home() {
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
                     onBlur={validateRegNo}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${regNoError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      regNoError === false
                         ? "border-red-500/50"
                         : regNoError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                      }`}
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
                   />
                   <AnimatePresence>
                     {!regNoError && regNoErr && (
@@ -348,7 +357,12 @@ export default function Home() {
                   }}
                 >
                   {loading ? (
-                    <TailSpin height={19} width={19} strokeWidth={10} color="#00d9ff" />
+                    <TailSpin
+                      height={19}
+                      width={19}
+                      strokeWidth={10}
+                      color="#00d9ff"
+                    />
                   ) : (
                     <>
                       INITIATE SYSTEM{" "}
@@ -565,14 +579,24 @@ export default function Home() {
         {currentPage === "game" && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
-              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
+              <GameOverModal
+                isOpen={showGameOver}
+                level={level}
+                secretWord={secretWord}
+                userName={name}
+                attempts={guesses}
+                timeUsed={totalTimeTaken}
+                onViewResults={() => {
+                  setCurrentPage("results");
+                }}
+              />
               <CongratulationsModal
-              isOpen={showCongrats}
-              level={level}
-              secretWord={secretWord}
-              userName={name}
-              attempts={guesses}
-              timeUsed={totalTimeTaken}
+                isOpen={showCongrats}
+                level={level}
+                secretWord={secretWord}
+                userName={name}
+                attempts={guesses}
+                timeUsed={totalTimeTaken}
               />
               {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
@@ -597,13 +621,18 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
                   </div>
                   <div className="text-4xl font-black">
-                    <Timer time={timeLeft} setCurrentPage={setCurrentPage} setShowGameOver={setShowGameOver} setTimeLeft={setTimeLeft} />
+                    <Timer
+                      time={timeLeft}
+                      setCurrentPage={setCurrentPage}
+                      setShowGameOver={setShowGameOver}
+                      setTimeLeft={setTimeLeft}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -627,14 +656,16 @@ export default function Home() {
                     {messages.map((m, i) => (
                       <div
                         key={i}
-                        className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
-                          }`}
+                        className={`flex ${
+                          m.role === "user" ? "justify-end" : "justify-start"
+                        }`}
                       >
                         <div
-                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${m.role === "user"
+                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${
+                            m.role === "user"
                               ? "bg-pink-500/20 border border-pink-500/50"
                               : "bg-cyan-500/20 border border-cyan-500/50"
-                            }`}
+                          }`}
                         >
                           {m.parts[0].text}
                         </div>{" "}
@@ -689,48 +720,65 @@ export default function Home() {
                 </p>
               </div>{" "}
               {/* Leaderboard List */}
-              <div className="relative z-30 space-y-4 mb-12">{players?.length == 0 ? (<div className="flex justify-center"><TailSpin height={24} width={24} strokeWidth={10} color="#00d9ff" /></div>) : (<>{players.map((player, idx) => (
-                <div
-                  key={idx}
-                  className="p-6 bg-slate-950/40 border-2 rounded-lg flex items-center justify-between"
-                  style={{
-                    borderColor: "rgba(0, 217, 255, 0.3)",
-                    backgroundColor: "rgba(0, 217, 255, 0.05)",
-                  }}
-                >
-                  <div className="flex items-center gap-6">
-                    <div
-                      className="text-4xl font-black"
-                      style={{ color: "#ff006e" }}
-                    >
-                      #{idx + 1}
-                    </div>
-                    <div>
-                      <p className="text-xl font-bold text-gray-100">
-                        {player.name}
-                      </p>{" "}
-                      <p className="text-xs text-gray-400 uppercase tracking-widest">
-                        Operative
-                      </p>
-                    </div>
+              <div className="relative z-30 space-y-4 mb-12">
+                {players?.length == 0 ? (
+                  <div className="flex justify-center">
+                    <TailSpin
+                      height={24}
+                      width={24}
+                      strokeWidth={10}
+                      color="#00d9ff"
+                    />
                   </div>
+                ) : (
+                  <>
+                    {players.map((player, idx) => (
+                      <div
+                        key={idx}
+                        className="p-6 bg-slate-950/40 border-2 rounded-lg flex items-center justify-between"
+                        style={{
+                          borderColor: "rgba(0, 217, 255, 0.3)",
+                          backgroundColor: "rgba(0, 217, 255, 0.05)",
+                        }}
+                      >
+                        <div className="flex items-center gap-6">
+                          <div
+                            className="text-4xl font-black"
+                            style={{ color: "#ff006e" }}
+                          >
+                            #{idx + 1}
+                          </div>
+                          <div>
+                            <p className="text-xl font-bold text-gray-100">
+                              {player.name}
+                            </p>{" "}
+                            <p className="text-xs text-gray-400 uppercase tracking-widest">
+                              Operative
+                            </p>
+                          </div>
+                        </div>
 
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5" style={{ color: "#00d9ff" }} />
-                    <p
-                      className="text-2xl font-black"
-                      style={{ color: "#00d9ff" }}
-                    >
-                      {formatTime(player.totalTime)}
-                    </p>
-                  </div>
-                </div>
-              ))}</>)}
+                        <div className="flex items-center gap-3">
+                          <Clock
+                            className="w-5 h-5"
+                            style={{ color: "#00d9ff" }}
+                          />
+                          <p
+                            className="text-2xl font-black"
+                            style={{ color: "#00d9ff" }}
+                          >
+                            {formatTime(player.totalTime)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
               {/* Footer */}
               <div className="relative z-30 text-center">
                 <Button
-                  onClick={() => setCurrentPage("login")}
+                  onClick={() =>{window.location.reload();}}
                   className="px-12 h-12 cursor-pointer font-bold uppercase tracking-widest text-lg"
                   style={{
                     background: "linear-gradient(90deg, #00d9ff, #ff006e)",

@@ -8,7 +8,7 @@ export async function GET() {
     
     const scoreRecord = await scores
       .find({})
-      .sort({ totalTime: -1,totalGueses: -1})
+      .sort({ totalTime:1,totalGueses:1})
       .limit(10)
       .toArray();
 
