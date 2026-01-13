@@ -22,12 +22,7 @@ import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
-<<<<<<< HEAD
 import toast, { Toaster } from 'react-hot-toast';
-=======
-import CongratulationsModal from "@/src/components/congratulations-modal";
-import GameOverModal from "@/src/components/game-over-modal";
->>>>>>> 136a4486ae509084667f29c1c98b23059956f882
 
 interface InstructionsPageProps {
   userName: string;
