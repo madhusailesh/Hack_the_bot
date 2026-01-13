@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono,Noto_Sans_JP } from "next/font/google";
+import { Geist, Geist_Mono} from "next/font/google";
 import {Analytics} from "@vercel/analytics/next";
 import "./globals.css";
-
-const notoSansJP = Noto_Sans_JP({subsets: ["latin", "cyrillic"], weight: ["400", "700", "900"]});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
