@@ -184,8 +184,9 @@ export default function Home() {
       }
 
       if (data.reply && data.reply.includes("CORRECT")) {
-        const timeTaken =
-          LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - timeLeft;
+       const timeTaken =
+  LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
+
         setTotalTimeTaken((p) => p + timeTaken);
         setShowCongrats(true);
         setTimeout(() => {
