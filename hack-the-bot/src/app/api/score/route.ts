@@ -14,6 +14,7 @@ export async function POST(req: Request) {
         regNo:body.regNo,
         userId:body.userId,
         totalTime:body.totalTime,
+        totalGueses:body.totalGueses,
         timestamp:new Date()
       },{session});
 

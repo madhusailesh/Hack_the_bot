@@ -22,7 +22,12 @@ import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
+<<<<<<< HEAD
 import toast, { Toaster } from 'react-hot-toast';
+=======
+import CongratulationsModal from "@/src/components/congratulations-modal";
+import GameOverModal from "@/src/components/game-over-modal";
+>>>>>>> 136a4486ae509084667f29c1c98b23059956f882
 
 interface InstructionsPageProps {
   userName: string;
@@ -48,12 +53,17 @@ export default function Home() {
   const [regNoError, setRegNoError] = useState<boolean | string>("");
   const [regNoErr, setRegNoErr] = useState<string>("");
   const [level, setLevel] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(10);
   const [secretWord, setSecretWord] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalTimeTaken, setTotalTimeTaken] = useState(0);
+  const [guesses,setGuesses] = useState<number>(0);
+  const [showCongrats,setShowCongrats] = useState<boolean>(false);
+  const [showGameOver , setShowGameOver] = useState<boolean>(false);
+
+  const levelHints = {1:"I've picked a place you'll find inside our university campus.",2:"This comes from the world of anime and its characters.",3:"I've picked the name of a well-known company.",4:"I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state."};
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -78,6 +88,7 @@ export default function Home() {
             regNo: Number(regNo),
             userId: userId,
             totalTime: totalTimeTaken,
+            totalGueses:guesses
           }),
         });
 
@@ -115,7 +126,7 @@ export default function Home() {
       return;
     }
 
-    const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
+    const lvlData = LEVEL_DATA[(level) as keyof typeof LEVEL_DATA];
     if (!lvlData) return;
 
     const word =
@@ -128,7 +139,7 @@ export default function Home() {
         role: "model",
         parts: [
           {
-            text: `I have picked a word related to Tech. Ask me hints!`,
+            text: levelHints[level as keyof typeof levelHints],
           },
         ],
       },
@@ -158,10 +169,12 @@ export default function Home() {
           secretWord,
           difficulty: LEVEL_DATA[level as keyof typeof LEVEL_DATA].difficulty,
           userMessage: input,
+          themeInformation: LEVEL_DATA[level as keyof typeof LEVEL_DATA].themeInformation
         }),
       });
       const data = await res.json();
       setLoading(false);
+      setGuesses((prev)=>prev+1);
 
       if (!res.ok || data.error) {
         // ✅ REPLACED ALERT WITH TOAST
@@ -179,7 +192,7 @@ export default function Home() {
         const timeTaken =
           LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - timeLeft;
         setTotalTimeTaken((p) => p + timeTaken);
-
+        setShowCongrats(true);
         setTimeout(() => {
           // ✅ REPLACED ALERT WITH TOAST
           toast.success(`SYSTEM HACKED: Level ${level} Cleared!`, {
@@ -195,7 +208,7 @@ export default function Home() {
             },
           });
           setLevel((p) => p + 1);
-        }, 100);
+        }, 5000);
       } else {
         setMessages((prev) => [
           ...prev,
@@ -296,6 +309,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,217,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,217,255,0.05)_1px,transparent_1px)] bg-[length:60px_60px]" />
       </div>
       <div className="min-h-screen z-20 flex items-center justify-center px-4 py-12">
+
         {currentPage === "login" && (
           <>
             <div className="w-full max-w-md">
@@ -416,6 +430,7 @@ export default function Home() {
             </div>
           </>
         )}
+
         {currentPage === "instructions" && (
           <>
             <div className="w-full max-w-3xl">
@@ -610,9 +625,19 @@ export default function Home() {
             </div>
           </>
         )}
+
         {currentPage === "game" && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
+              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
+              <CongratulationsModal
+              isOpen={showCongrats}
+              level={level}
+              secretWord={secretWord}
+              userName={name}
+              attempts={guesses}
+              timeUsed={totalTimeTaken}
+              />
               {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
@@ -636,13 +661,13 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
                   </div>
                   <div className="text-4xl font-black">
-                    <Timer time={timeLeft} setCurrentPage={setCurrentPage} setTimeLeft={setTimeLeft} />
+                    <Timer time={timeLeft} setCurrentPage={setCurrentPage} setShowGameOver={setShowGameOver} setTimeLeft={setTimeLeft} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -680,7 +705,7 @@ export default function Home() {
                       </div>
                     ))}
                     {loading && (
-                      <div className="text-xs text-gray-500">AI thinking…</div>
+                      <div className="text-xs text-gray-500">Thinking…</div>
                     )}
                   </div>
 
@@ -704,6 +729,7 @@ export default function Home() {
             </div>
           </>
         )}
+
         {currentPage === "results" && (
           <>
             {" "}

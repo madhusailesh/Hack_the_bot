@@ -144,7 +144,7 @@ export default function GameOverModal({
             ;(e.target as HTMLElement).style.backgroundColor = "rgba(255, 0, 110, 0.2)"
           }}
         >
-          📊 VIEW RESULTS
+          📊 VIEW LEADERBOARD
         </button>
       </div>
     </div>

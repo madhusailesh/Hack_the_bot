@@ -6,8 +6,6 @@ interface CongratulationsModalProps {
   secretWord: string
   userName: string
   attempts: number
-  isLastLevel: boolean
-  onNext: () => void
   timeUsed: number
 }
 
@@ -17,8 +15,6 @@ export default function CongratulationsModal({
   secretWord,
   userName,
   attempts,
-  isLastLevel,
-  onNext,
   timeUsed,
 }: CongratulationsModalProps) {
   if (!isOpen) return null
@@ -128,24 +124,6 @@ export default function CongratulationsModal({
             <p className="text-xs text-gray-400 uppercase tracking-widest mt-2">Level</p>
           </div>
         </div>
-
-        <button
-          onClick={onNext}
-          className="w-full py-3 px-6 rounded-lg font-bold uppercase tracking-widest text-black transition-all duration-300 text-lg"
-          style={{
-            background: "linear-gradient(90deg, #00d9ff, #ff006e)",
-            boxShadow: "0 0 25px rgba(0, 217, 255, 0.4)",
-          }}
-          onMouseEnter={(e) => {
-            ;(e.target as HTMLElement).style.boxShadow =
-              "0 0 40px rgba(0, 217, 255, 0.6), 0 0 20px rgba(255, 0, 110, 0.4)"
-          }}
-          onMouseLeave={(e) => {
-            ;(e.target as HTMLElement).style.boxShadow = "0 0 25px rgba(0, 217, 255, 0.4)"
-          }}
-        >
-          {isLastLevel ? "🏆 VIEW RESULTS" : "NEXT LEVEL →"}
-        </button>
       </div>
     </div>
   )
