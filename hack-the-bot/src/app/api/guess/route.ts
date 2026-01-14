@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+// Aapki keys ki list waisi hi rahegi
 const GEMINI_API_KEYS: string[] = [
   process.env.GEMINI_API_KEY,
   process.env.GEMINI_API_KEY_1,
@@ -36,38 +37,61 @@ const GEMINI_API_KEYS: string[] = [
 
 export async function POST(req: Request) {
   try {
-    const api = GEMINI_API_KEYS[Math.floor(Math.random()*GEMINI_API_KEYS.length)];
+    // 1. Data ko loop se bahar nikal lo
+    const { history, secretWord, difficulty, userMessage, themeInformation } = await req.json();
 
-    const genAI = new GoogleGenerativeAI(api);
-    const { history, secretWord, difficulty, userMessage,themeInformation } = await req.json();
+    // 2. Keys ko shuffle karo taaki har request alag key se start ho (Random Load Balancing)
+    // Ye step ensure karta hai ki hamesha pehli key hi na use ho.
+    const shuffledKeys = [...GEMINI_API_KEYS].sort(() => 0.5 - Math.random());
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    let lastError = null;
 
-    const chat = model.startChat({
-      history: [
-        {
-          role: "user",
-          parts: [{ text: `System Instruction: You are a game host. The secret word is "${secretWord}". 
-          Rules:
-          1. The game will reveal hints about the secret word to the user , the secret word relates to a common theme for a level and it is going to be a 4 level game.
-          2. Do NOT reveal the word directly.
-          3. Difficulty is: ${difficulty}.
-          4. If the user guesses exactly "${secretWord}" (case insensitive), reply ONLY with "CORRECT".
-          5. Keep hints short.
-          6. I am giving additional information related to the secret word and to the common theme it belongs to , if i don't give , use your own information.
-          7. With the information that you are having about the words and the theme related to words , some additional information are ${themeInformation}` }],
-        },
-        { role: "model", parts: [{ text: "Understood. Let's play." }] },
-        ...history,
-      ],
-    });
+    // 3. Loop through all keys
+    for (const apiKey of shuffledKeys) {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const result = await chat.sendMessage(userMessage);
-    const response = result.response.text();
+        const chat = model.startChat({
+          history: [
+            {
+              role: "user",
+              parts: [{ text: `System Instruction: You are a game host. The secret word is "${secretWord}". 
+              Rules:
+              1. The game will reveal hints about the secret word to the user , the secret word relates to a common theme for a level and it is going to be a 4 level game.
+              2. Do NOT reveal the word directly.
+              3. Difficulty is: ${difficulty}.
+              4. If the user guesses exactly "${secretWord}" (case insensitive), reply ONLY with "CORRECT".
+              5. Keep hints short.
+              6. I am giving additional information related to the secret word and to the common theme it belongs to , if i don't give , use your own information.
+              7. With the information that you are having about the words and the theme related to words , some additional information are ${themeInformation}` }],
+            },
+            { role: "model", parts: [{ text: "Understood. Let's play." }] },
+            ...history,
+          ],
+        });
 
-    return NextResponse.json({ reply: response });
-  } catch (error:any) {
-    console.error(error);
-    return NextResponse.json({ error: "AI Failed" }, { status: 500 });
+        // Agar ye line success hoti hai, to function yahin return kar dega
+        const result = await chat.sendMessage(userMessage);
+        const response = result.response.text();
+
+        return NextResponse.json({ reply: response });
+
+      } catch (error: any) {
+        // Agar error aaya (jaise 429 Quota Exceeded), to console mein log karo aur next key try karo
+        console.warn(`API Key failed. Trying next one... Error: ${error.message}`);
+        lastError = error;
+        // 'continue' keyword automatic next loop iteration (next key) pe le jayega
+        continue;
+      }
+    }
+
+    // Agar loop khatam ho gaya aur koi bhi key nahi chali
+    console.error("All API keys exhausted or failed.");
+    return NextResponse.json({ error: "All AI keys failed. Please try again later." }, { status: 500 });
+
+  } catch (error: any) {
+    console.error("Fatal error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
