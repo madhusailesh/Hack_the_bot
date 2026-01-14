@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-
-// Aapki keys ki list waisi hi rahegi
+ 
 const GEMINI_API_KEYS: string[] = [
   process.env.GEMINI_API_KEY,
   process.env.GEMINI_API_KEY_1,
@@ -37,7 +36,7 @@ const GEMINI_API_KEYS: string[] = [
 
 export async function POST(req: Request) {
   try {
-    // 1. Data ko loop se bahar nikal lo
+    // 1. Data ko loop se bahar nikal liya
     const { history, secretWord, difficulty, userMessage, themeInformation } = await req.json();
 
     // 2. Keys ko shuffle karo taaki har request alag key se start ho (Random Load Balancing)
@@ -61,7 +60,7 @@ export async function POST(req: Request) {
               1. The game will reveal hints about the secret word to the user , the secret word relates to a common theme for a level and it is going to be a 4 level game.
               2. Do NOT reveal the word directly.
               3. Difficulty is: ${difficulty}.
-              4. If the user guesses exactly "${secretWord}" (case insensitive), reply ONLY with "CORRECT".
+              4. If the user guesses the secret word, verify it flexibly: accept standard abbreviations (e.g., 'TCS' for 'Tata Consultancy Services'), and ignore minor spelling mistakes or typos. If the guess is correct based on these rules, reply ONLY with "CORRECT".
               5. Keep hints short.
               6. I am giving additional information related to the secret word and to the common theme it belongs to , if i don't give , use your own information.
               7. With the information that you are having about the words and the theme related to words , some additional information are ${themeInformation}` }],
