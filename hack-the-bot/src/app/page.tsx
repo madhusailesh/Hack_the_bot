@@ -82,6 +82,7 @@ export default function Home() {
       const regNo = localStorage.getItem("playerReg");
 
       try {
+        setLoading(true);
         await fetch("/api/score", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,10 +94,10 @@ export default function Home() {
             totalGueses:guesses
           }),
         });
-
-        setShowCongrats(true);
-        setTimeout(()=>{setShowCongrats(false);setCurrentPage("results");},5000);
+        setLoading(false);
+        setCurrentPage("results");
       } catch {
+        setLoading(false);
         // ✅ REPLACED ALERT WITH TOAST
         toast.error("DATA CORRUPTION: Score save failed", {
           style: {
@@ -607,7 +608,7 @@ export default function Home() {
           </>
         )}
 
-        {currentPage === "game" && (
+        {(currentPage === "game" && level<=4) && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
               <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
@@ -716,7 +717,7 @@ export default function Home() {
             </div>
           </>
         )}
-
+        {(currentPage === "game" && level > 4 && loading === true) && (<></>)}
         {currentPage === "results" && (
           <>
             {" "}
