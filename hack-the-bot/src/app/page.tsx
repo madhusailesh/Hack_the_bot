@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import {
-  CheckCircle2,
   Lightbulb,
   Send,
   Clock,
@@ -14,11 +13,6 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
-import LoginPage from "@/src/components/login-page";
-import InstructionsPage from "@/src/components/instructions-page";
-import GamePage from "@/src/components/game-page";
-import ResultsPage from "@/src/components/results-page";
 import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
@@ -35,6 +29,8 @@ interface InstructionsPageProps {
 interface Player {
   name: string;
   totalTime: number;
+  level?: number;
+  totalGueses?: number;
 }
 
 export type PageState = "login" | "instructions" | "game" | "results";
@@ -75,15 +71,15 @@ export default function Home() {
       setPlayers(Array.isArray(data.scores) ? data.scores : []);
     };
     fetchLeaderboard();
-  }, [level, currentPage]); // Added currentPage to refresh leaderboard on results page
+  }, [level, currentPage]); 
 
-  // ✅ New Reusable Function to Save Game Data
-  const saveGameData = async (currentLevel: number) => {
+  const saveGameData = async (levelToSave: number) => {
     const playerName = localStorage.getItem("playerName");
     const playerReg = localStorage.getItem("playerReg");
 
-    // Prevent saving if no user data or if already saving (simple check)
     if (!playerName || !playerReg) return;
+    
+    const finalLevel = Math.max(0, levelToSave);
 
     try {
       setLoading(true);
@@ -96,11 +92,10 @@ export default function Home() {
           userId: userId,
           totalTime: totalTimeTaken,
           totalGueses: guesses,
-          level: currentLevel, // Passing level here
+          level: finalLevel, 
         }),
       });
       setLoading(false);
-      // We don't force page change here, it's handled by modals or level logic
     } catch {
       setLoading(false);
       toast.error("DATA CORRUPTION: Score save failed", {
@@ -113,22 +108,22 @@ export default function Home() {
     }
   };
 
-  // ✅ Trigger Save on Game Over
   useEffect(() => {
     if (showGameOver) {
-      // Save data immediately when game over screen appears
-      saveGameData(level);
+      saveGameData(level - 1); 
     }
   }, [showGameOver]);
 
-  // ✅ Logic for Level Progression and Victory
   useEffect(() => {
-    // If user beats level 4, they win the whole game
     if (level > 4) {
-      saveGameData(level).then(() => {
+      saveGameData(4).then(() => {
         setCurrentPage("results");
       });
       return;
+    }
+
+    if (level > 1) {
+       saveGameData(level - 1);
     }
 
     const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
@@ -221,7 +216,6 @@ export default function Home() {
     }
   };
 
-  // ... (Validation and Login functions remain same)
   const validateName = () => {
     const res = registerSchema.shape.name.safeParse(name);
     if (!res.success) {
@@ -244,6 +238,7 @@ export default function Home() {
     }
   };
 
+  // ✅ Updated handleLogin logic
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -251,7 +246,7 @@ export default function Home() {
       return;
     }
     setLoading(true);
-    // Call your existing auth service
+    
     const res = await fetch("/services/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -264,9 +259,25 @@ export default function Home() {
     if (res.ok || data.status === 200 || data.status === 401) {
       localStorage.setItem("playerName", name);
       localStorage.setItem("playerReg", regNo);
-      localStorage.setItem("UserId", userId);
+      localStorage.setItem("UserId", data.uId);
       setLoading(false);
-      setCurrentPage("instructions");
+
+      // Agar user pehle se khel chuka hai (alreadyPlayed is true), toh seedha Results page
+      if (data.alreadyPlayed) {
+        toast("Welcome back! Showing leaderboard.", {
+          icon: '🏆',
+          style: {
+            borderRadius: '10px',
+            background: '#1e293b',
+            color: '#00d9ff',
+            border: '1px solid #00d9ff'
+          },
+        });
+        setCurrentPage("results");
+      } else {
+        // Naya user -> Instructions page
+        setCurrentPage("instructions");
+      }
     } else {
       setLoading(false);
       toast.error("ACCESS DENIED: " + data.message, {
@@ -290,7 +301,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen min-w-screen relative overflow-hidden bg-black">
-      {/* Background elements preserved */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center opacity-40"
         style={{
@@ -303,7 +313,6 @@ export default function Home() {
       </div>
       
       <div className="min-h-screen z-20 flex items-center justify-center px-4 py-12">
-        {/* Login Page */}
         {currentPage === "login" && (
           <>
             <div className="w-full max-w-md">
@@ -432,7 +441,6 @@ export default function Home() {
           </>
         )}
 
-        {/* Instructions Page */}
         {currentPage === "instructions" && (
           <>
             <div className="w-full max-w-3xl">
@@ -457,7 +465,6 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Instructions content shortened for brevity, keep your original content here */}
               <div className="space-y-6 p-8 bg-slate-950/40 border-2 border-cyan-500/30 rounded-lg backdrop-blur-sm mb-6">
                 <div className="space-y-4">
                   {[
@@ -539,7 +546,6 @@ export default function Home() {
           </>
         )}
 
-        {/* Game Page */}
         {currentPage === "game" && level <= 4 && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
@@ -562,7 +568,6 @@ export default function Home() {
                 attempts={guesses}
                 timeUsed={totalTimeTaken}
               />
-              {/* Sidebar */}
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
                   <p className="text-center text-xl font-bold tracking-tight text-gray-300 mt-2">
@@ -608,13 +613,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>{" "}
-              {/* Main */}
               <div className="flex-1 relative z-30 space-y-6">
                 <h1 className="text-5xl font-black text-cyan-400">
                   HACK THE BOT
                 </h1>
 
-                {/* Chat */}
                 <div className="h-96 flex flex-col bg-slate-950/40 border-2 border-cyan-500/30 rounded-lg p-6">
                   <div className="flex-1 overflow-y-auto space-y-4">
                     {messages.map((m, i) => (
@@ -640,7 +643,6 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Input */}
                   <div className="pt-4 border-t border-cyan-500/20 flex gap-2">
                     <Input
                       value={input}
@@ -661,7 +663,6 @@ export default function Home() {
           </>
         )}
         
-        {/* Loading Spinner during Level Transition/Save */}
         {(currentPage === "game" && level>4 && loading) && (
           <>
             <div className="fixed inset-0 flex justify-center items-center">
@@ -675,12 +676,10 @@ export default function Home() {
           </>
         )}
 
-        {/* Results Page */}
         {currentPage === "results" && (
           <>
             {" "}
             <div className="w-full max-w-4xl">
-              {/* Header */}
               <div className="relative z-30 text-center mb-12">
                 <div className="flex justify-center mb-4">
                   <Trophy className="w-16 h-16" style={{ color: "#ff006e" }} />
@@ -695,10 +694,9 @@ export default function Home() {
                   LEADERBOARD
                 </h1>
                 <p className="text-gray-400 uppercase tracking-widest">
-                  Top Hackers Ranked by Time
+                  Top Hackers Ranked by Level & Time
                 </p>
               </div>{" "}
-              {/* Leaderboard List */}
               <div className="relative z-30 space-y-4 mb-12">
                 {players?.length == 0 ? (
                   <div className="flex justify-center">
@@ -737,24 +735,42 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          <Clock
-                            className="w-5 h-5"
-                            style={{ color: "#00d9ff" }}
-                          />
-                          <p
-                            className="text-2xl font-black"
-                            style={{ color: "#00d9ff" }}
-                          >
-                            {formatTime(player.totalTime)}
-                          </p>
+                        <div className="flex items-center gap-6 text-right">
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-2">
+                              <Zap className="w-4 h-4" style={{ color: "#fbbf24" }} />
+                              <span className="text-xl font-bold" style={{ color: "#fbbf24" }}>
+                                {player.level ?? "?"}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Level</p>
+                          </div>
+
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-2">
+                              <Target className="w-4 h-4" style={{ color: "#ff006e" }} />
+                              <span className="text-xl font-bold" style={{ color: "#ff006e" }}>
+                                {player.totalGueses ?? 0}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Guesses</p>
+                          </div>
+
+                          <div className="flex flex-col items-end w-20">
+                             <div className="flex items-center gap-2 justify-end">
+                              <Clock className="w-4 h-4" style={{ color: "#00d9ff" }} />
+                              <span className="text-xl font-bold" style={{ color: "#00d9ff" }}>
+                                {formatTime(player.totalTime)}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Time</p>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </>
                 )}
               </div>
-              {/* Footer */}
               <div className="relative z-30 text-center">
                 <Button
                   onClick={() => {

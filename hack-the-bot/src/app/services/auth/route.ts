@@ -26,11 +26,12 @@ export async function POST(req: NextRequest) {
     const user = await users.findOne({ regd_no: regd_no });
 
     if (user) {
-      
+      // Agar user pehle se hai, toh indicate karo ki wo khel chuka hai
       return NextResponse.json(
         { 
           message: "User logged in", 
-          uId: user.uId 
+          uId: user.uId,
+          alreadyPlayed: true // <--- Ye naya flag add kiya hai
         },
         { status: 200 }
       );
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       {
         message: "Successful registration",
         uId: uId,
+        alreadyPlayed: false // Naya user hai
       },
       {
         status: 200,
