@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { LEVEL_DATA } from "@/src/data/words";
 import { useRouter } from "next/navigation";
@@ -22,7 +23,7 @@ import { Timer } from "@/src/components/timer";
 import { registerSchema } from "@/src/schemas/registerSchema";
 import { AnimatePresence, motion } from "framer-motion";
 import { TailSpin } from "react-loader-spinner";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 import GameOverModal from "@/src/components/game-over-modal";
 import CongratulationsModal from "@/src/components/congratulations-modal";
 interface InstructionsPageProps {
@@ -91,7 +92,7 @@ export default function Home() {
             regNo: Number(regNo),
             userId: userId,
             totalTime: totalTimeTaken,
-            totalGueses:guesses
+            totalGueses: guesses,
           }),
         });
         setLoading(false);
@@ -101,10 +102,10 @@ export default function Home() {
         // ✅ REPLACED ALERT WITH TOAST
         toast.error("DATA CORRUPTION: Score save failed", {
           style: {
-            border: '1px solid #ff006e',
-            background: '#0f172a',
-            color: '#ff006e',
-          }
+            border: "1px solid #ff006e",
+            background: "#0f172a",
+            color: "#ff006e",
+          },
         });
       }
     };
@@ -169,10 +170,10 @@ export default function Home() {
         // ✅ REPLACED ALERT WITH TOAST
         toast.error(data.error || "SYSTEM MALFUNCTION: AI Error", {
           style: {
-            border: '1px solid #ff006e',
-            background: '#0f172a',
-            color: '#ff006e',
-          }
+            border: "1px solid #ff006e",
+            background: "#0f172a",
+            color: "#ff006e",
+          },
         });
         return;
       }
@@ -184,8 +185,8 @@ export default function Home() {
         setTotalTimeTaken((p) => p + timeTaken);
         setShowCongrats(true);
         setTimeout(() => {
-          setShowCongrats(false);
           setLevel((p) => p + 1);
+          setShowCongrats(false);
         }, 5000);
       } else {
         setMessages((prev) => [
@@ -198,10 +199,10 @@ export default function Home() {
       // ✅ REPLACED ALERT WITH TOAST
       toast.error("CONNECTION LOST: Server error", {
         style: {
-          border: '1px solid #ff006e',
-          background: '#0f172a',
-          color: '#ff006e',
-        }
+          border: "1px solid #ff006e",
+          background: "#0f172a",
+          color: "#ff006e",
+        },
       });
     }
   };
@@ -257,14 +258,14 @@ export default function Home() {
       // ✅ REPLACED ALERT WITH TOAST
       toast.error("ACCESS DENIED: " + data.message, {
         style: {
-          border: '1px solid #ff006e',
-          padding: '16px',
-          color: '#ff006e',
-          background: '#0f172a',
+          border: "1px solid #ff006e",
+          padding: "16px",
+          color: "#ff006e",
+          background: "#0f172a",
         },
         iconTheme: {
-          primary: '#ff006e',
-          secondary: '#fff',
+          primary: "#ff006e",
+          secondary: "#fff",
         },
       });
     }
@@ -319,12 +320,13 @@ export default function Home() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onBlur={validateName}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${nameError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      nameError === false
                         ? "border-red-500/50"
                         : nameError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                      }`}
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
                   />
                   <AnimatePresence>
                     {!nameError && nameErr && (
@@ -349,12 +351,13 @@ export default function Home() {
                     value={regNo}
                     onChange={(e) => setRegNo(e.target.value)}
                     onBlur={validateRegNo}
-                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${regNoError === false
+                    className={`h-12 bg-slate-900/50 border-2 text-gray-100 placeholder-gray-600 focus:outline-none transition-all ${
+                      regNoError === false
                         ? "border-red-500/50"
                         : regNoError === true
-                          ? "border-green-500/50"
-                          : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
-                      }`}
+                        ? "border-green-500/50"
+                        : "border-cyan-500/30 focus:border-cyan-500 focus:shadow-lg focus:shadow-cyan-500/20"
+                    }`}
                   />
                   <AnimatePresence>
                     {!regNoError && regNoErr && (
@@ -608,10 +611,20 @@ export default function Home() {
           </>
         )}
 
-        {(currentPage === "game" && level<=4) && (
+        {currentPage === "game" && level <= 4 && (
           <>
             <div className="w-full max-w-7xl flex gap-6">
-              <GameOverModal isOpen={showGameOver} level={level} secretWord={secretWord} userName={name} attempts={guesses} timeUsed={totalTimeTaken} onViewResults={()=>{setCurrentPage("results");}} />
+              <GameOverModal
+                isOpen={showGameOver}
+                level={level}
+                secretWord={secretWord}
+                userName={name}
+                attempts={guesses}
+                timeUsed={totalTimeTaken}
+                onViewResults={() => {
+                  setCurrentPage("results");
+                }}
+              />
               <CongratulationsModal
                 isOpen={showCongrats}
                 level={level}
@@ -643,7 +656,7 @@ export default function Home() {
                 </div>{" "}
                 <div
                   className="p-4 rounded-lg border-2"
-                  style={{ borderColor: (timeLeft) < 10 ? "#ff006e" : "#00d9ff" }}
+                  style={{ borderColor: timeLeft < 10 ? "#ff006e" : "#00d9ff" }}
                 >
                   <div className="flex items-center gap-2 text-xs uppercase">
                     <Clock className="w-4 h-4" /> Time Remaining
@@ -683,10 +696,11 @@ export default function Home() {
                         }`}
                       >
                         <div
-                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${m.role === "user"
+                          className={`max-w-sm px-4 py-3 rounded-lg text-sm ${
+                            m.role === "user"
                               ? "bg-pink-500/20 border border-pink-500/50"
                               : "bg-cyan-500/20 border border-cyan-500/50"
-                            }`}
+                          }`}
                         >
                           {m.parts[0].text}
                         </div>{" "}
@@ -717,7 +731,18 @@ export default function Home() {
             </div>
           </>
         )}
-        {(currentPage === "game" && level > 4 && loading === true) && (<></>)}
+        {(currentPage === "game" && level>4 && loading) && (
+          <>
+            <div className="fixed inset-0 flex justify-center items-center">
+              <TailSpin
+                height={28}
+                width={28}
+                strokeWidth={12}
+                color="#00d9ff"
+              />
+            </div>
+          </>
+        )}
         {currentPage === "results" && (
           <>
             {" "}
@@ -799,7 +824,9 @@ export default function Home() {
               {/* Footer */}
               <div className="relative z-30 text-center">
                 <Button
-                  onClick={() =>{window.location.reload();}}
+                  onClick={() => {
+                    window.location.reload();
+                  }}
                   className="px-12 h-12 cursor-pointer font-bold uppercase tracking-widest text-lg"
                   style={{
                     background: "linear-gradient(90deg, #00d9ff, #ff006e)",
