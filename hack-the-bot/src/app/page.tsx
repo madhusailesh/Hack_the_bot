@@ -416,7 +416,6 @@ export default function Home() {
                 attempts={guesses}
                 timeUsed={totalTimeTaken}
                 isLastLevel={level === 4}
-                onNext={handleProceedToNextLevel} 
               />
               <CongratulationsModal
                 isOpen={showCongrats}
@@ -425,8 +424,6 @@ export default function Home() {
                 userName={name}
                 attempts={guesses}
                 timeUsed={totalTimeTaken}
-                isLastLevel={level === 4}
-                onNext={handleProceedToNextLevel}
               />
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
@@ -440,7 +437,7 @@ export default function Home() {
                 </div>{" "}
                 <div className="p-4 rounded-lg border-2" style={{ borderColor: (timeLeft ?? 0) < 10 ? "#ff006e" : "#00d9ff" }}>
                   <div className="flex items-center gap-2 text-xs uppercase"><Clock className="w-4 h-4" /> Time Remaining</div>
-                  <div className="text-4xl font-black"><Timer time={timeLeft} setCurrentPage={setCurrentPage} setShowGameOver={setShowGameOver} setTimeLeft={setTimeLeft} /></div>
+                  <div className="text-4xl font-black"><Timer time={timeLeft} setLevel={setLevel} setCurrentPage={setCurrentPage} setShowGameOver={setShowGameOver} setTimeLeft={setTimeLeft} /></div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs uppercase text-yellow-400"><Lightbulb className="w-4 h-4" /> Hints</div>

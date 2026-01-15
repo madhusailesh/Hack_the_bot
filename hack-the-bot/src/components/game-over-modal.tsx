@@ -7,8 +7,7 @@ interface GameOverModalProps {
   userName: string
   attempts: number
   timeUsed: number
-  isLastLevel: boolean // ✅ New Prop
-  onNext: () => void // ✅ Renamed for clarity (pehle onViewResults tha)
+  isLastLevel : boolean
 }
 
 export default function GameOverModal({
@@ -19,7 +18,6 @@ export default function GameOverModal({
   attempts,
   timeUsed,
   isLastLevel,
-  onNext,
 }: GameOverModalProps) {
   if (!isOpen) return null
 
@@ -103,19 +101,6 @@ export default function GameOverModal({
             <p className="text-xs text-gray-400 uppercase tracking-widest mt-2">Level</p>
           </div>
         </div>
-
-        <button
-          onClick={onNext}
-          className="w-full py-3 px-6 rounded-lg font-bold uppercase tracking-widest text-white transition-all duration-300 text-lg border-2"
-          style={{
-            backgroundColor: "rgba(255, 0, 110, 0.2)",
-            borderColor: "#ff006e",
-            boxShadow: "0 0 25px rgba(255, 0, 110, 0.4)",
-          }}
-        >
-          {/* ✅ Button text condition ke hisab se */}
-          {isLastLevel ? "📊 VIEW RESULTS" : "⏭️ NEXT LEVEL"}
-        </button>
       </div>
     </div>
   )

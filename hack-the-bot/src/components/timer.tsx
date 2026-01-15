@@ -8,8 +8,10 @@ export function Timer(props: {
   setCurrentPage: React.Dispatch<React.SetStateAction<PageState>>;
   setTimeLeft: React.Dispatch<React.SetStateAction<number | null>>;
   setShowGameOver: React.Dispatch<React.SetStateAction<boolean>>;
+  setLevel: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const setShowGameOver = props.setShowGameOver;
+  const setLevel = props.setLevel;
   // const setCurrentPage = props.setCurrentPage; // Ab iski zarurat nahi hai yahan
 
   useEffect(() => {
@@ -18,6 +20,10 @@ export function Timer(props: {
     // Agar time khatam ho gaya (0 ya usse kam)
     if (props.time <= 0) {
       setShowGameOver(true);
+      setTimeout(()=>{
+        setShowGameOver(false);
+        setLevel((p)=>p+1);
+      },5000);
       
       // 🛑 REMOVED: Yahan se wo 'setTimeout' aur 'setCurrentPage("results")' 
       // wala code hata diya hai jo zabardasti leaderboard dikha raha tha.
