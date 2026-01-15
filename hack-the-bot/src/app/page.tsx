@@ -416,6 +416,7 @@ export default function Home() {
                 attempts={guesses}
                 timeUsed={totalTimeTaken}
                 isLastLevel={level === 4}
+                onNext={handleProceedToNextLevel} 
               />
               <CongratulationsModal
                 isOpen={showCongrats}
@@ -423,7 +424,9 @@ export default function Home() {
                 secretWord={secretWord}
                 userName={name}
                 attempts={guesses}
+                isLastLevel={level === 4}
                 timeUsed={totalTimeTaken}
+                onNext={handleProceedToNextLevel}
               />
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">

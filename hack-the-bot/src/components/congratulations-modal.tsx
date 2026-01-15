@@ -7,6 +7,8 @@ interface CongratulationsModalProps {
   userName: string
   attempts: number
   timeUsed: number
+  isLastLevel: boolean
+  onNext: () => void
 }
 
 export default function CongratulationsModal({
@@ -15,6 +17,8 @@ export default function CongratulationsModal({
   secretWord,
   userName,
   attempts,
+  isLastLevel,
+  onNext,
   timeUsed,
 }: CongratulationsModalProps) {
   if (!isOpen) return null
@@ -70,6 +74,20 @@ export default function CongratulationsModal({
           <Stat label="Time Used" value={formatTime(timeUsed)} color="#00d9ff" />
           <Stat label="Level" value={`${level}/4`} color="#ff006e" />
         </div>
+
+        {isLastLevel && (
+          <button
+            onClick={onNext}
+            className="w-full py-3 rounded-lg font-bold uppercase tracking-widest text-black transition-all"
+            style={{
+              background: "linear-gradient(90deg, #00d9ff, #ff006e)",
+            }}
+          >
+            🏆 VIEW RESULTS
+          </button>
+        )}
+
+
       </div>
     </div>
   )
