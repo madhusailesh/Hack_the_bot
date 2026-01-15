@@ -5,13 +5,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Sorting: 
-    // 1. level: -1 (Highest level first)
-    // 2. totalTime: 1 (Lowest time first)
-    // 3. totalGueses: 1 (Lowest guesses first)
+    // Priority:
+    // 1. levelsWon: -1 (Highest wins is best)
+    // 2. totalTime: 1 (Lowest time is best)
+    // 3. totalGueses: 1 (Lowest guesses is best)
     const scoreRecord = await scores
       .find({})
-      .sort({ level: -1, totalTime: 1, totalGueses: 1 }) 
+      .sort({ levelsWon: -1, totalTime: 1, totalGueses: 1 }) 
       .limit(10)
       .toArray();
 

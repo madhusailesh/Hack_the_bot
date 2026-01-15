@@ -7,7 +7,8 @@ interface GameOverModalProps {
   userName: string
   attempts: number
   timeUsed: number
-  onViewResults: () => void
+  isLastLevel: boolean // ✅ New Prop
+  onNext: () => void // ✅ Renamed for clarity (pehle onViewResults tha)
 }
 
 export default function GameOverModal({
@@ -17,7 +18,8 @@ export default function GameOverModal({
   userName,
   attempts,
   timeUsed,
-  onViewResults,
+  isLastLevel,
+  onNext,
 }: GameOverModalProps) {
   if (!isOpen) return null
 
@@ -39,7 +41,6 @@ export default function GameOverModal({
           boxShadow: "0 0 40px rgba(255, 0, 110, 0.4), inset 0 0 20px rgba(255, 0, 110, 0.1)",
         }}
       >
-        {/* Game over emojis */}
         <div className="flex justify-center gap-6 text-5xl mb-6 animate-pulse">
           <span>💀</span>
           <span>⏰</span>
@@ -64,9 +65,12 @@ export default function GameOverModal({
               textShadow: "0 0 15px rgba(255, 107, 107, 0.4)",
             }}
           >
-            Sorry, you lost!
+            Level Failed!
           </p>
-          <p className="text-sm text-gray-400">Better luck next time</p>
+          <p className="text-sm text-gray-400">
+             {/* ✅ Message condition ke hisab se */}
+             {isLastLevel ? "Game Over" : "Don't give up! Proceeding to next level..."}
+          </p>
         </div>
 
         <div
@@ -83,68 +87,34 @@ export default function GameOverModal({
           >
             {secretWord}
           </p>
-          <p className="text-center text-gray-400 text-sm">
-            Don't give up, <span className="text-cyan-400 font-bold">{userName}</span>!
-          </p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-8">
-          <div
-            className="p-4 rounded-lg text-center border-2"
-            style={{
-              borderColor: "#ff006e",
-              backgroundColor: "rgba(255, 0, 110, 0.1)",
-            }}
-          >
-            <p className="text-3xl font-black" style={{ color: "#ff006e" }}>
-              {attempts}
-            </p>
+          <div className="p-4 rounded-lg text-center border-2" style={{ borderColor: "#ff006e", backgroundColor: "rgba(255, 0, 110, 0.1)" }}>
+            <p className="text-3xl font-black" style={{ color: "#ff006e" }}>{attempts}</p>
             <p className="text-xs text-gray-400 uppercase tracking-widest mt-2">Attempts</p>
           </div>
-          <div
-            className="p-4 rounded-lg text-center border-2"
-            style={{
-              borderColor: "#ff6b6b",
-              backgroundColor: "rgba(255, 107, 107, 0.1)",
-            }}
-          >
-            <p className="text-3xl font-black" style={{ color: "#ff6b6b" }}>
-              {formatTime(timeUsed)}
-            </p>
+          <div className="p-4 rounded-lg text-center border-2" style={{ borderColor: "#ff6b6b", backgroundColor: "rgba(255, 107, 107, 0.1)" }}>
+            <p className="text-3xl font-black" style={{ color: "#ff6b6b" }}>{formatTime(timeUsed)}</p>
             <p className="text-xs text-gray-400 uppercase tracking-widest mt-2">Time Used</p>
           </div>
-          <div
-            className="p-4 rounded-lg text-center border-2"
-            style={{
-              borderColor: "#ff006e",
-              backgroundColor: "rgba(255, 0, 110, 0.1)",
-            }}
-          >
-            <p className="text-3xl font-black" style={{ color: "#ff006e" }}>
-              {level}/4
-            </p>
+          <div className="p-4 rounded-lg text-center border-2" style={{ borderColor: "#ff006e", backgroundColor: "rgba(255, 0, 110, 0.1)" }}>
+            <p className="text-3xl font-black" style={{ color: "#ff006e" }}>{level}/4</p>
             <p className="text-xs text-gray-400 uppercase tracking-widest mt-2">Level</p>
           </div>
         </div>
 
         <button
-          onClick={onViewResults}
+          onClick={onNext}
           className="w-full py-3 px-6 rounded-lg font-bold uppercase tracking-widest text-white transition-all duration-300 text-lg border-2"
           style={{
             backgroundColor: "rgba(255, 0, 110, 0.2)",
             borderColor: "#ff006e",
             boxShadow: "0 0 25px rgba(255, 0, 110, 0.4)",
           }}
-          onMouseEnter={(e) => {
-            ;(e.target as HTMLElement).style.boxShadow = "0 0 40px rgba(255, 0, 110, 0.6)"
-            ;(e.target as HTMLElement).style.backgroundColor = "rgba(255, 0, 110, 0.3)"
-          }}
-          onMouseLeave={(e) => {
-            ;(e.target as HTMLElement).style.boxShadow = "0 0 25px rgba(255, 0, 110, 0.4)"
-            ;(e.target as HTMLElement).style.backgroundColor = "rgba(255, 0, 110, 0.2)"
-          }}
         >
-          📊 VIEW LEADERBOARD
+          {/* ✅ Button text condition ke hisab se */}
+          {isLastLevel ? "📊 VIEW RESULTS" : "⏭️ NEXT LEVEL"}
         </button>
       </div>
     </div>

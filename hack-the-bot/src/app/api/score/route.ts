@@ -9,33 +9,31 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     await session.withTransaction(async () => {
-      // 'insertOne' ki jagah 'findOneAndUpdate' use kiya hai with upsert: true
-      // Isse duplicate key error nahi aayega, balki existing record update ho jayega
       const result = await scores.findOneAndUpdate(
-        { regNo: body.regNo }, // Check karega ki is RegNo ka user hai ya nahi
+        { regNo: body.regNo },
         {
           $set: {
             name: body.name,
             userId: body.userId,
             totalTime: body.totalTime,
             totalGueses: body.totalGueses,
-            level: body.level,
+            level: body.level, // Total levels played
+            levelsWon: body.levelsWon, // NEW: Levels actually won
             timestamp: new Date()
           }
         },
         { 
           session, 
-          upsert: true, // Agar nahi mila to naya bana dega
-          returnDocument: "after" // Update ke baad naya document return karega
+          upsert: true,
+          returnDocument: "after"
         }
       );
 
-      // MongoDB driver version ke hisab se result kabhi direct doc hota hai, kabhi result.value
       const savedScore = result.value || result;
 
       if (savedScore && savedScore._id) {
         await scoreSheetOutbox.insertOne({
-          type: "SCORE_INSERTED", // Worker ko sync karne ke liye signal
+          type: "SCORE_INSERTED",
           scoreId: savedScore._id,
           processed: false,
           createdAt: new Date()
@@ -43,11 +41,10 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({ message: "Score Saved And Queued for spreadsheet sync." }, { status: 200 });
+    return NextResponse.json({ message: "Score Saved" }, { status: 200 });
 
   } catch (e: any) {
     console.error("Score Save Error:", e);
-    // Duplicate key error ab handle ho gaya hai, par generic error handling rakhi hai
     return NextResponse.json({ error: "Failed to save score" }, { status: e.status || 500 });
   } finally {
     await session.endSession();
