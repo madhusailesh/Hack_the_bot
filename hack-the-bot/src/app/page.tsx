@@ -80,8 +80,8 @@ export default function Home() {
     fetchLeaderboard();
   }, [level, currentPage]);
 
-  // ✅ Updated: Added optional 'overrideTotalTime' argument
-  const saveGameData = async (levelToSave: number, overrideTotalTime?: number) => {
+  // ✅ Updated: Added optional 'overrideTotalTime' and 'overrideLevelsWon' arguments
+  const saveGameData = async (levelToSave: number, overrideTotalTime?: number, overrideLevelsWon?: number) => {
     const playerName = localStorage.getItem("playerName");
     const playerReg = localStorage.getItem("playerReg");
 
@@ -91,6 +91,8 @@ export default function Home() {
     
     // Agar override time diya hai (Loss ke case mein immediate update), toh wo use karo
     const timeToSend = overrideTotalTime !== undefined ? overrideTotalTime : totalTimeTaken;
+    // Agar override wins diya hai (Win ke case mein immediate update), toh wo use karo
+    const winsToSend = overrideLevelsWon !== undefined ? overrideLevelsWon : levelsWonCount;
 
     try {
       setLoading(true);
@@ -104,7 +106,7 @@ export default function Home() {
           totalTime: timeToSend, 
           totalGueses: guesses,
           level: finalLevel,
-          levelsWon: levelsWonCount, 
+          levelsWon: winsToSend, // ✅ Updated value used here
         }),
       });
       setLoading(false);
@@ -143,14 +145,16 @@ export default function Home() {
     }
   }, [showGameOver, level, totalTimeTaken]);
 
-  const handleProceedToNextLevel = () => {
+  // ✅ Updated: Accepts finalTime and finalWins
+  const handleProceedToNextLevel = (finalTime?: number, finalWins?: number) => {
     if (level < 4) {
       setLevel((prev) => prev + 1);
       setShowGameOver(false);
       setShowCongrats(false);
       setInput("");
     } else {
-      saveGameData(4).then(() => {
+      // Use passed values if available
+      saveGameData(4, finalTime, finalWins).then(() => {
         setCurrentPage("results");
       });
     }
@@ -233,15 +237,20 @@ export default function Home() {
         const timeTaken =
           LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
 
-        setTotalTimeTaken((p) => p + timeTaken);
-        setLevelsWonCount((prev) => prev + 1);
+        // ✅ Calculate new values immediately
+        const newTotalTime = totalTimeTaken + timeTaken;
+        const newWins = levelsWonCount + 1;
+
+        setTotalTimeTaken(newTotalTime);
+        setLevelsWonCount(newWins);
         
         // ✅ Flag set karo taaki Game Over logic trigger na ho agar timer race condition ho
         isLevelScoreProcessed.current = true;
 
         setShowCongrats(true);
         setTimeout(() => {
-            handleProceedToNextLevel();
+            // ✅ Pass updated values to next level handler
+            handleProceedToNextLevel(newTotalTime, newWins);
         }, 5000);
       } else {
         setMessages((prev) => [
@@ -416,7 +425,7 @@ export default function Home() {
                 attempts={guesses}
                 timeUsed={totalTimeTaken}
                 isLastLevel={level === 4}
-                onNext={handleProceedToNextLevel} 
+                onNext={() => handleProceedToNextLevel()} 
               />
               <CongratulationsModal
                 isOpen={showCongrats}
@@ -426,7 +435,7 @@ export default function Home() {
                 attempts={guesses}
                 isLastLevel={level === 4}
                 timeUsed={totalTimeTaken}
-                onNext={handleProceedToNextLevel}
+                onNext={() => handleProceedToNextLevel()}
               />
               <div className="w-80 relative z-30 space-y-6">
                 <div className="flex flex-col space-y-2 p-4 bg-slate-950/50 rounded-lg border border-cyan-500/30">
