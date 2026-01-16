@@ -33,7 +33,6 @@ const GEMINI_API_KEYS: string[] = [
   process.env.GEMINI_API_KEY_28,
   process.env.GEMINI_API_KEY_29,
   process.env.GEMINI_API_KEY_30,
-
   process.env.GEMINI_API_KEY_31,
   process.env.GEMINI_API_KEY_32,
   process.env.GEMINI_API_KEY_33,
@@ -45,8 +44,7 @@ const GEMINI_API_KEYS: string[] = [
   process.env.GEMINI_API_KEY_39,
   process.env.GEMINI_API_KEY_40,
   process.env.GEMINI_API_KEY_41,
-
- process.env.GEMINI_API_KEY_42,
+  process.env.GEMINI_API_KEY_42,
 process.env.GEMINI_API_KEY_43,
 process.env.GEMINI_API_KEY_44,
 process.env.GEMINI_API_KEY_45,
@@ -105,6 +103,12 @@ process.env.GEMINI_API_KEY_97,
 process.env.GEMINI_API_KEY_98,
 process.env.GEMINI_API_KEY_99,
 process.env.GEMINI_API_KEY_100,
+process.env.GEMINI_API_KEY_101,
+process.env.GEMINI_API_KEY_102,
+process.env.GEMINI_API_KEY_103,
+process.env.GEMINI_API_KEY_104,
+process.env.GEMINI_API_KEY_105,
+process.env.GEMINI_API_KEY_106,
 ].filter((key): key is string => Boolean(key));
 
 export async function POST(req: Request) {
