@@ -58,18 +58,20 @@ export default function Home() {
   const [showCongrats, setShowCongrats] = useState<boolean>(false);
   const [showGameOver, setShowGameOver] = useState<boolean>(false);
   
-  // ✅ New Ref: Ye track karega ki is level ka score process ho gaya hai ya nahi
-  // Taaki Win aur Loss dono case mein time double add na ho.
   const isLevelScoreProcessed = useRef(false);
 
   const [levelsWonCount, setLevelsWonCount] = useState<number>(0);
 
   const levelHints = {
-    1: "I've picked a place you'll find inside our university campus.",
-    2: "This comes from the world of anime and its characters.",
-    3: "I've picked the name of a well-known company.",
-    4: "I've picked an abstract word, not a place or name. This word represents an idea, feeling, or state.",
-  };
+  1: "This answer is a part of our university life 🏫 — a place or spot students talk about, visit, or fear, but it’s not a classroom. Think campus stories, rules, or routines.",
+
+  2: "This comes from a fictional universe 📺✨ that shaped childhood and teenage years — filled with heroes, powers, monsters, and unforgettable characters.",
+
+  3: "This is the name of a powerful organization 💼🌍 — known for technology, hiring engineers, global presence, and shaping careers. Think service vs product.",
+
+  4: "This is an invisible concept 🔐🧠 — it can protect, attack, hide, or break things in the digital world. Imagine real-life security situations, not technical definitions.",
+};
+
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -80,7 +82,6 @@ export default function Home() {
     fetchLeaderboard();
   }, [level, currentPage]);
 
-  // ✅ Updated: Added optional 'overrideTotalTime' and 'overrideLevelsWon' arguments
   const saveGameData = async (levelToSave: number, overrideTotalTime?: number, overrideLevelsWon?: number) => {
     const playerName = localStorage.getItem("playerName");
     const playerReg = localStorage.getItem("playerReg");
@@ -88,10 +89,7 @@ export default function Home() {
     if (!playerName || !playerReg) return;
     
     const finalLevel = Math.max(0, levelToSave);
-    
-    // Agar override time diya hai (Loss ke case mein immediate update), toh wo use karo
     const timeToSend = overrideTotalTime !== undefined ? overrideTotalTime : totalTimeTaken;
-    // Agar override wins diya hai (Win ke case mein immediate update), toh wo use karo
     const winsToSend = overrideLevelsWon !== undefined ? overrideLevelsWon : levelsWonCount;
 
     try {
@@ -106,7 +104,7 @@ export default function Home() {
           totalTime: timeToSend, 
           totalGueses: guesses,
           level: finalLevel,
-          levelsWon: winsToSend, // ✅ Updated value used here
+          levelsWon: winsToSend, 
         }),
       });
       setLoading(false);
@@ -122,53 +120,43 @@ export default function Home() {
     }
   };
 
-  // ✅ MAIN FIX: Handle Timeout / Game Over Score
+  // ✅ Handle Timeout / Game Over Score
   useEffect(() => {
     if (showGameOver) {
-      // Agar pehle se process ho chuka hai (e.g. Win ho gaya tha), toh skip karo
       if (isLevelScoreProcessed.current) return;
 
-      // Calculate Full Time for this level (Kyunki user haar gaya)
       const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
       const timeToAdd = lvlData ? lvlData.time : 0;
       
       const newTotal = totalTimeTaken + timeToAdd;
       
-      // State update karo
       setTotalTimeTaken(newTotal);
-
-      // Database mein save karo (Updated time ke sath)
       saveGameData(level - 1, newTotal);
-      
-      // Flag set karo taaki dubara add na ho
       isLevelScoreProcessed.current = true;
     }
   }, [showGameOver, level, totalTimeTaken]);
 
-  // ✅ Updated: Accepts finalTime and finalWins
   const handleProceedToNextLevel = (finalTime?: number, finalWins?: number) => {
     if (level < 4) {
+      // ✅ FIX: Level change se pehle time null karo
+      setTimeLeft(null); 
       setLevel((prev) => prev + 1);
       setShowGameOver(false);
       setShowCongrats(false);
       setInput("");
     } else {
-      // Use passed values if available
       saveGameData(4, finalTime, finalWins).then(() => {
         setCurrentPage("results");
       });
     }
   };
 
-  // Level Reset Logic
   useEffect(() => {
-    // ✅ Reset processed flag for new level
     isLevelScoreProcessed.current = false;
 
     const lvlData = LEVEL_DATA[level as keyof typeof LEVEL_DATA];
     if (!lvlData) return;
 
-    // Previous level data saving (redundant but safe)
     if (level > 1) {
        saveGameData(level - 1);
     }
@@ -233,25 +221,25 @@ export default function Home() {
       }
 
       if (data.reply && data.reply.includes("CORRECT")) {
-        // ✅ WIN Logic: Add only time spent
+        // ✅ WIN Logic
         const timeTaken =
           LEVEL_DATA[level as keyof typeof LEVEL_DATA].time - (timeLeft ?? 0);
 
-        // ✅ Calculate new values immediately
         const newTotalTime = totalTimeTaken + timeTaken;
         const newWins = levelsWonCount + 1;
 
         setTotalTimeTaken(newTotalTime);
         setLevelsWonCount(newWins);
         
-        // ✅ Flag set karo taaki Game Over logic trigger na ho agar timer race condition ho
         isLevelScoreProcessed.current = true;
 
         setShowCongrats(true);
-        setTimeout(() => {
-            // ✅ Pass updated values to next level handler
-            handleProceedToNextLevel(newTotalTime, newWins);
-        }, 5000);
+        
+        if (level < 4) {
+            setTimeout(() => {
+                handleProceedToNextLevel(newTotalTime, newWins);
+            }, 5000);
+        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -449,7 +437,21 @@ export default function Home() {
                 </div>{" "}
                 <div className="p-4 rounded-lg border-2" style={{ borderColor: (timeLeft ?? 0) < 10 ? "#ff006e" : "#00d9ff" }}>
                   <div className="flex items-center gap-2 text-xs uppercase"><Clock className="w-4 h-4" /> Time Remaining</div>
-                  <div className="text-4xl font-black"><Timer time={timeLeft} setLevel={setLevel} setCurrentPage={setCurrentPage} setShowGameOver={setShowGameOver} setTimeLeft={setTimeLeft} /></div>
+                  
+                  {/* ✅ KEY ADDED: Forces Timer component to reset completely on level change */}
+                  <div className="text-4xl font-black">
+                    <Timer 
+                        key={level} 
+                        time={timeLeft} 
+                        setLevel={setLevel} 
+                        setCurrentPage={setCurrentPage} 
+                        setShowGameOver={setShowGameOver} 
+                        setTimeLeft={setTimeLeft} 
+                        loading={loading}
+                        level={level}
+                    />
+                  </div>
+
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs uppercase text-yellow-400"><Lightbulb className="w-4 h-4" /> Hints</div>
@@ -486,7 +488,8 @@ export default function Home() {
             </div>
           </>
         )}
-
+        
+        {/* Results Page Code remains same... */}
         {currentPage === "results" && (
             <>
              {" "}

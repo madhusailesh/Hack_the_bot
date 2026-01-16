@@ -9,39 +9,50 @@ export function Timer(props: {
   setTimeLeft: React.Dispatch<React.SetStateAction<number | null>>;
   setShowGameOver: React.Dispatch<React.SetStateAction<boolean>>;
   setLevel: React.Dispatch<React.SetStateAction<number>>;
+  loading: boolean;
+  level: number;
 }) {
   const setShowGameOver = props.setShowGameOver;
   const setLevel = props.setLevel;
-  // const setCurrentPage = props.setCurrentPage; // Ab iski zarurat nahi hai yahan
+  const level = props.level;
 
   useEffect(() => {
+    // Agar time null hai to kuch mat karo (Safe state)
     if (props.time === null) return;
 
-    // Agar time khatam ho gaya (0 ya usse kam)
+    // ✅ CASE: TIME KHATAM (Game Over)
     if (props.time <= 0) {
       setShowGameOver(true);
-      setTimeout(()=>{
-        setShowGameOver(false);
-        setLevel((p)=>p+1);
-      },30000);
-      
-      // 🛑 REMOVED: Yahan se wo 'setTimeout' aur 'setCurrentPage("results")' 
-      // wala code hata diya hai jo zabardasti leaderboard dikha raha tha.
-      // Ab control puri tarah se Modal aur Next Level button ke paas hai.
-      
+
+      // Level 4 (Last Level) mein auto-skip nahi karna hai
+      if (level < 4) {
+        const timeoutId = setTimeout(() => {
+          setShowGameOver(false);
+          
+          // ✅ CRITICAL FIX: Time ko pehle NULL karo taaki agle level mein '0' detect na ho
+          props.setTimeLeft(null); 
+          
+          setLevel((p) => p + 1);
+        }, 4000);
+
+        return () => clearTimeout(timeoutId);
+      }
       return;
     }
 
-    // Timer countdown logic
+    // ✅ CASE: TIMER RUNNING
+    // Pause timer when AI is thinking
     const timer = setInterval(() => {
-      props.setTimeLeft((prev) => {
-        if (prev === null || prev <= 0) return 0;
-        return prev - 1;
-      });
+      if (!props.loading) {
+        props.setTimeLeft((prev) => {
+          if (prev === null || prev <= 0) return 0;
+          return prev - 1;
+        });
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [props.time, setShowGameOver, props.setTimeLeft]);
+  }, [props.time, setShowGameOver, props.setTimeLeft, props.loading, level, setLevel]);
 
   return <span>{props.time}</span>;
 }
