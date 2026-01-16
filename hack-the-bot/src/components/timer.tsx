@@ -23,7 +23,7 @@ export function Timer(props: {
       setTimeout(()=>{
         setShowGameOver(false);
         setLevel((p)=>p+1);
-      },5000);
+      },30000);
       
       // 🛑 REMOVED: Yahan se wo 'setTimeout' aur 'setCurrentPage("results")' 
       // wala code hata diya hai jo zabardasti leaderboard dikha raha tha.
