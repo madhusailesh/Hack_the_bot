@@ -109,6 +109,16 @@ process.env.GEMINI_API_KEY_103,
 process.env.GEMINI_API_KEY_104,
 process.env.GEMINI_API_KEY_105,
 process.env.GEMINI_API_KEY_106,
+process.env.GEMINI_API_KEY_107,
+process.env.GEMINI_API_KEY_108,
+process.env.GEMINI_API_KEY_109,
+process.env.GEMINI_API_KEY_110,
+process.env.GEMINI_API_KEY_111,
+process.env.GEMINI_API_KEY_112,
+process.env.GEMINI_API_KEY_113,
+process.env.GEMINI_API_KEY_114,
+process.env.GEMINI_API_KEY_115,
+process.env.GEMINI_API_KEY_116,
 ].filter((key): key is string => Boolean(key));
 
 export async function POST(req: Request) {
