@@ -18,7 +18,7 @@ export const LEVEL_DATA = {
     themeInformation: "Top Tech and Consultancy Giants. Tesla (Elon Musk, Electric Vehicles, Spaceships, not a service company). Tata Consultancy Services (TCS, part of Tata Group, huge mass recruiter in India, service-based). Infosys (Narayan Murthy, founded in Pune/Bangalore, huge campus in Mysore). Wipro (Azim Premji, started with vegetable oils then IT). Deloitte (Part of the 'Big 4' accounting firms, auditing and consulting). Cognizant (US-headquartered but huge workforce in Chennai, CTS). Accenture (Global professional services, huge brand value, strictly corporate culture)."
   },
   4: {
-    time: 420,
+    time: 360,
     words: ["Firewall", "Hacker", "Virus", "Password", "Encryption", "Cloud", "Bug"],
     difficulty: "Expert: Use analogies or real-world security metaphors. For example, describe a Firewall as a 'gatekeeper' or 'security guard'. Do not use technical definitions directly.",
     themeInformation: "Core hacking and tech concepts. Firewall (network security system), Hacker (someone who exploits systems), Virus (malicious code), Password (secret key), Encryption (scrambling data), Cloud (remote servers), Bug (error in code)."
